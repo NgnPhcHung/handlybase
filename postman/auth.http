@@ -1,0 +1,19 @@
+@app_url = localhost:50051/api/app/users
+
+### Create user
+# POST {{app_url}}/create-user
+# Content-Type: application/json
+#
+# {}
+
+
+### login 
+POST {{app_url}}/login
+Content-Type: application/json
+
+{
+  "username":"test",
+  "password":"123"
+}
+
+
