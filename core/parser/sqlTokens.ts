@@ -9,6 +9,7 @@ export const KeyWords = {
 export const SQLType: Record<PropertyType, string> = {
   text: "TEXT",
   number: "INTEGER",
+  boolean: "INTEGER",
 };
 
 export enum SQLConstrains {
@@ -40,4 +41,4 @@ export interface FieldProperties {
   default?: any;
 }
 
-export type PropertyType = "text" | "number";
+export type PropertyType = "text" | "number" | "boolean";

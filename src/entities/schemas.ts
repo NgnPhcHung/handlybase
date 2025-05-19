@@ -15,5 +15,5 @@ export class Users {
 	password!: string;
 	updatedAt!: string;
 	createdAt!: string;
-	isActive!: number;
+	isActive!: boolean;
 }

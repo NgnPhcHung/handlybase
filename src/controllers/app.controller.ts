@@ -17,15 +17,4 @@ export class AppController {
     this.appService.handleSchemaImport(body);
     return true;
   }
-
-  @Post("create-user")
-  async createUser(@Body() body: any) {
-    this.appService.createUser(body);
-    return true;
-  }
-
-  @Post("login")
-  async login(@Body() body: any) {
-    return this.appService.login(body);
-  }
 }

@@ -20,7 +20,7 @@ export const interfaceHanlders = (name: string) => {
     const required = !!field.required ? field.required : true;
     collectionProperties += `\t${field.name}`;
     collectionProperties += `${required ? "!" : "?"}: `;
-    collectionProperties += `${field.type === "text" ? "string" : "number"}`;
+    collectionProperties += `${field.type === "text" ? "string" : field.type}`;
     collectionProperties += ";\n";
   };
 

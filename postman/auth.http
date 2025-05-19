@@ -12,8 +12,18 @@ POST {{app_url}}/login
 Content-Type: application/json
 
 {
-  "username":"test",
+  "username":"test_username",
   "password":"123"
+}
+
+### register 
+POST {{app_url}}/register
+Content-Type: application/json
+
+{
+  "username":"test_username",
+  "password":"123",
+  "email":"123"
 }
 
 

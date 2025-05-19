@@ -33,7 +33,5 @@ export class AppService extends EntityManager<Users> {
     ]);
   }
 
-  async login(body: any) {
-    return this.findOne({ id: 1 });
-  }
+  async login(body: any) {}
 }
