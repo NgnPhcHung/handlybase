@@ -1,7 +1,8 @@
-import { Container } from "../containers";
-import { AnyClass } from "../types/object";
 import { Express, Request, Response } from "express";
 import "reflect-metadata";
+import { Container } from "./containers";
+import { AnyClass } from "./types/object";
+import Database from "better-sqlite3";
 
 const container = new Container();
 
@@ -70,7 +71,6 @@ export const bootstrapApp = ({
     for (const route of routes) {
       const method = route.method as keyof Express;
       const routeHandler = route.handler;
-      // const fullRoutePath = `${fullPath}/${route.path}`.replace(/\/+/g, "/");
       const fullRoutePath = `/${fullPath}/${route.path}`.replace(/\/+/g, "/");
       (expressApp[method] as any)(
         fullRoutePath,
@@ -86,6 +86,7 @@ export const bootstrapApp = ({
           }
         },
       );
+
       console.log("[Handly bootstrap] route:", {
         method,
         path: fullRoutePath,
@@ -99,6 +100,8 @@ export const bootstrapApp = ({
       parentPath: fullPath,
     });
   }
-
+  const db = new Database("database.db", {
+    verbose: console.log,
+  });
   return expressApp;
 };

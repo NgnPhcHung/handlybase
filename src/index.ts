@@ -1,8 +1,8 @@
 import express, { Express } from "express";
-import { bootstrapApp } from "../core/base/startApp";
 import "dotenv/config";
-import { limiter } from "../core/base/rateLimt";
 import { AppController } from "./controllers/app.controller";
+import { limiter } from "../core/rateLimt";
+import { bootstrapApp } from "../core/startApp";
 
 const app: Express = express();
 app.use(express.json());

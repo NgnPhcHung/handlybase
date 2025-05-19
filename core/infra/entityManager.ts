@@ -1,13 +1,21 @@
 import Database, { Database as DbType } from "better-sqlite3";
 import { AnyClass } from "../types/object";
 
-type ToBolean<T> = {
-  [K in keyof T]: T[K] extends object ? ToBolean<T[K]> : boolean;
+type BooleanValue<T> = {
+  [K in keyof T]: T[K] extends object ? BooleanValue<T[K]> : boolean;
 };
 
-interface FindOneOptions<T> {
-  select?: Partial<ToBolean<T>>;
+interface SelectionOption<T> {
+  select?: Partial<BooleanValue<T>>;
+}
+
+interface FindOneOptions<T> extends SelectionOption<T> {
   where?: Partial<T>;
+}
+
+interface UpdateOptions<T> extends SelectionOption<T> {
+  entity: T | string | number;
+  updateValue: Partial<T>;
 }
 export abstract class EntityManager<T> {
   abstract entityClass: AnyClass;
@@ -32,12 +40,12 @@ export abstract class EntityManager<T> {
       .all();
   }
 
-  private find({ ...args }: any) {
+  private find(args: any) {
     const entityName = new this.entityClass();
-    const selectQuery = `${this.selectCondition} * from ${entityName.constructor.name}`;
+    const selectQuery = `${this.selectCondition} * from ${entityName.constructor.name.toLowerCase()}`;
 
-    return this.where({ ...args }, selectQuery)?.length
-      ? this.where({ ...args }, selectQuery)
+    return this.where(args, selectQuery)?.length
+      ? (this.where(args, selectQuery) as T[])
       : null;
   }
 
@@ -54,20 +62,21 @@ export abstract class EntityManager<T> {
       const query = `${selectQuery} ${args ? `WHERE ${keys}` : ""} `;
 
       this.selectCondition = "SELECT ";
-      console.log({ query });
       return this.db.prepare(query).all(args);
-    } catch (erorr) {
-      throw new Error(`Failed while query ${this.entity}`);
+    } catch (error) {
+      throw new Error(`Failed while query ${this.entity}: ${error}`);
     }
   }
 
-  findOne(opts: FindOneOptions<T>) {
+  findOne(opts: FindOneOptions<T>): T | null {
     const { select, where } = opts;
     this.entity = new this.entityClass().constructor.name.toLowerCase();
     this.selectCondition += "DISTINCT ";
 
     if (!select) {
-      return this.find({ ...where });
+      const res = this.find(where);
+
+      return res ? res[0] : null;
     }
 
     const propertyLength = Object.entries(select).length;
@@ -78,7 +87,50 @@ export abstract class EntityManager<T> {
       }
     });
     const query = this.selectCondition;
-    return this.where(where, query) as T;
+    const result = this.where(where, query);
+    if (!result || !result.length) {
+      return null;
+    }
+    return result[0] as T;
+  }
+
+  update({ entity, updateValue, select }: UpdateOptions<T>) {
+    return this.updateMethod({ entity, updateValue, select });
+  }
+
+  private updateMethod({ entity, updateValue, select }: UpdateOptions<T>) {
+    try {
+      this.entity = new this.entityClass().constructor.name.toLowerCase();
+
+      const updates = Object.keys(updateValue)
+        .map((key) => `${key} = @${key}`)
+        .join(", ");
+
+      let whereClause = "";
+      let whereParams: any = {};
+
+      if (typeof entity === "string" || typeof entity === "number") {
+        whereClause = `WHERE id = @id`;
+        whereParams.id = entity;
+      } else {
+        const conditions = Object.entries(entity as object).map(
+          ([key, _]) => `${key} = @${key}`,
+        );
+        whereClause = `WHERE ${conditions.join(" AND ")}`;
+        whereParams = entity;
+      }
+
+      const query = `UPDATE ${this.entity} SET ${updates} ${whereClause}`;
+      const stmt = this.db.prepare(query);
+
+      this.db.transaction(() => {
+        stmt.run({ ...updateValue, ...whereParams });
+      });
+
+      return this.findOne({ select, where: entity as any });
+    } catch (error) {
+      throw new Error(`Failed to update ${this.entity}: ${error}`);
+    }
   }
 
   create({ ...args }: any): T {

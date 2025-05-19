@@ -26,4 +26,12 @@ Content-Type: application/json
   "email":"123"
 }
 
+### Change password 
+PUT {{app_url}}/change-password
+Content-Type: application/json
+
+{
+  "password":"123"
+}
+
 

@@ -32,4 +32,18 @@ export class UserService extends EntityManager<Users> {
     const newEntity = this.create(payload);
     return newEntity;
   }
+
+  changePassword(payload: { password: string }) {
+    const user = this.findOne({ where: { id: 3 } });
+    if (!user) {
+      throw new Error("Username or password does not exist");
+    }
+
+    const res = this.update({
+      entity: user,
+      updateValue: { password: payload.password },
+    });
+
+    return res;
+  }
 }
