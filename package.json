@@ -23,6 +23,7 @@
     "dotenv": "16.5.0",
     "express": "5.1.0",
     "express-rate-limit": "7.5.0",
+    "noname_orm": "^0.0.4",
     "reflect-metadata": "0.2.2",
     "rimraf": "6.0.1",
     "typescript": "5.8.3"

@@ -2,9 +2,8 @@ import { Express, Request, Response } from "express";
 import "reflect-metadata";
 import { Container } from "./containers";
 import { AnyClass } from "./types/object";
-import Database from "better-sqlite3";
 
-const container = new Container();
+export const container = new Container();
 
 interface BootstrapAppOps {
   expressApp: Express;
@@ -21,7 +20,7 @@ enum ParamType {
 
 function resolveParams(
   req: Request,
-  res: Response,
+  _: Response,
   instance: any,
   handlerName: string,
 ): any[] {
@@ -100,8 +99,5 @@ export const bootstrapApp = ({
       parentPath: fullPath,
     });
   }
-  const db = new Database("database.db", {
-    verbose: console.log,
-  });
   return expressApp;
 };

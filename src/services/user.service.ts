@@ -8,7 +8,7 @@ import { Users } from "../entities/schemas";
 export class UserService extends EntityManager<Users> {
   entityClass = Users;
 
-  login(payload: LoginDto) {
+  async login(payload: LoginDto) {
     const res = this.findOne({
       select: { id: true, username: true, email: true },
       where: payload,

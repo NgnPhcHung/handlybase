@@ -1,9 +1,14 @@
-import "reflect-metadata";
-
 export class Container {
   private instances = new Map();
 
-  resolve<T>(target: new (...args: any[]) => T): T {
+  register<T>(token: new (...args: any[]) => T, instance: T): void {
+    this.instances.set(token, instance);
+  }
+  resolve<T>(target: any): T {
+    if (this.instances.has(target)) {
+      return this.instances.get(target);
+    }
+
     const deps = Reflect.getMetadata("design:paramtypes", target) || [];
     const injections = deps.map((dep: any) => this.resolve(dep));
     const instance = new target(...injections);

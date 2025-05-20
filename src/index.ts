@@ -1,20 +1,29 @@
 import express, { Express } from "express";
 import "dotenv/config";
 import { AppController } from "./controllers/app.controller";
-import { limiter } from "../core/rateLimt";
-import { bootstrapApp } from "../core/startApp";
+import { bootstrapApp, container, DatabaseFactory, limiter } from "../core";
+import { DatabaseClient } from "../core/databases/databaseClient";
 
 const app: Express = express();
 app.use(express.json());
 
-function bootstrap() {
+async function bootstrap() {
+  const db = DatabaseFactory.getDatabase({
+    type: "sqlite",
+    config: {
+      connectionString: "database.db",
+    },
+  });
+
+  await db.connect();
+  app.use(limiter());
+  container.register(DatabaseClient, db); // THIS IS IMPORTANT, don’t delete it
+
   bootstrapApp({
     expressApp: app,
     controllers: [AppController],
     parentPath: "api",
   });
-
-  app.use(limiter());
 }
 
 bootstrap();
