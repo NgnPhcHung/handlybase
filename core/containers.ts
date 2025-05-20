@@ -1,7 +1,7 @@
 export class Container {
   private instances = new Map();
 
-  register<T>(token: new (...args: any[]) => T, instance: T): void {
+  register<T>(token: any, instance: T): void {
     this.instances.set(token, instance);
   }
   resolve<T>(target: any): T {

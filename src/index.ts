@@ -17,7 +17,7 @@ async function bootstrap() {
 
   await db.connect();
   app.use(limiter());
-  container.register(DatabaseClient, db); // THIS IS IMPORTANT, don’t delete it
+  container.register(DatabaseClient, db);
 
   bootstrapApp({
     expressApp: app,

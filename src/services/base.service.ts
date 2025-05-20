@@ -4,7 +4,7 @@ import { Users } from "../entities/schemas";
 
 export class BaseService extends BaseRepository<Users> {
   constructor(db: DatabaseClient) {
-    super(Users, db);
+    super(Users);
   }
   find(entity: Partial<Users>) {
     return super.find({ id: 3 });
