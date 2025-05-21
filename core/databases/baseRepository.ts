@@ -1,6 +1,11 @@
 import { container } from "../startApp";
-import { EntityClass } from "../types";
-import { DatabaseClient } from "./databaseClient";
+import { EntityClass, WhereOption } from "../types";
+import {
+  BooleanValue,
+  DatabaseClient,
+  MethodOptions,
+  SelectionOption,
+} from "./databaseClient";
 
 export class BaseRepository<T> {
   private db!: DatabaseClient;
@@ -13,19 +18,25 @@ export class BaseRepository<T> {
     return this.db;
   }
 
-  async find(entity: Partial<T>) {
-    const tableName = this.entityClass.name.toLowerCase();
-    const keys = Object.keys(entity);
-    const values = Object.values(entity);
-
-    let sql = `SELECT * FROM ${tableName}`;
-    if (keys.length > 0) {
-      const whereClause = keys.map((key) => `${key} = ?`).join(" AND ");
-      sql += ` WHERE ${whereClause}`;
-    }
-
-    return this.db.query<T>(this.entityClass, sql, values);
+  async find(opts: MethodOptions<T>): Promise<T[] | []> {
+    return this.db.find<T>(this.entityClass, opts);
   }
 
+  async findOne(opts: MethodOptions<T>): Promise<T | null> {
+    return this.db.findOne<T>(this.entityClass, opts);
+  }
+
+  async update(
+    target: Partial<EntityClass<T>> | string | number,
+    updateValue: Partial<EntityClass<T>>,
+    selectValue?: Partial<BooleanValue<T>>,
+  ): Promise<T | null> {
+    return this.db.update<T>(
+      this.entityClass,
+      target,
+      updateValue,
+      selectValue,
+    );
+  }
   async persist<T>(entity: T): Promise<void> {}
 }
