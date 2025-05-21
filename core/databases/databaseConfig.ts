@@ -5,7 +5,7 @@ export type DatabaseConfig = CommonConfig & SqliteConfig;
 type CommonConfig = {
   type: "sqlite";
 };
-export type SqliteConfig = {
+export type SqliteConfig = CommonConfig & {
   config: {
     connectionString: string;
     verbose?: () => void;
@@ -13,7 +13,7 @@ export type SqliteConfig = {
   };
 };
 
-export type SqlConfig = {
+export type SqlConfig = CommonConfig & {
   config: {
     sqlConfig?: number;
   };

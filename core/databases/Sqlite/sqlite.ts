@@ -1,14 +1,19 @@
 import SqliteDatabase from "better-sqlite3";
+import { EntityClass } from "../../types";
 import { DatabaseClient } from "../databaseClient";
 import { SqliteConfig } from "../databaseConfig";
 
-export class SqliteClient implements DatabaseClient {
+export class SqliteClient extends DatabaseClient {
   private static instance: SqliteClient;
   private db?: SqliteDatabase.Database;
 
-  private constructor(private dbConfig: SqliteConfig) {}
+  constructor(private dbConfig: SqliteConfig) {
+    super();
+  }
 
   static getInstance(config: SqliteConfig): SqliteClient {
+    console.log(config);
+
     if (!SqliteClient.instance) {
       SqliteClient.instance = new SqliteClient(config);
     }
@@ -33,8 +38,12 @@ export class SqliteClient implements DatabaseClient {
       );
     }
   }
-  query<T = any>(sql: string, params?: any[]): Promise<T> {
-    console.log("Running query:", sql, params);
+  query<T = any>(
+    entity: EntityClass<T>,
+    sql: string,
+    params?: any[],
+  ): Promise<T> {
+    console.log("Running query:", sql, params, entity);
     if (!this.db) throw new Error("DB not connected");
     const stmt = this.db.prepare(sql);
     return Promise.resolve(stmt.all(params) as T).catch((error) => error);

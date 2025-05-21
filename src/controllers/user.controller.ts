@@ -17,7 +17,7 @@ export class UserController {
   login(@Body() payload: LoginDto) {
     this.tempSerivce.find({ createdAt: "" });
 
-    // return this.userService.login(payload);
+    return this.userService.login(payload);
   }
 
   @Post("/register")

@@ -1,17 +1,19 @@
 import { container } from "../startApp";
+import { EntityClass } from "../types";
 import { DatabaseClient } from "./databaseClient";
 
 export class BaseRepository<T> {
   private db!: DatabaseClient;
 
-  constructor(protected readonly entityClass: new () => T) {
+  constructor(protected readonly entityClass: EntityClass<T>) {
     this.db = container.resolve(DatabaseClient);
   }
 
-  async find(entity: Partial<T>): Promise<T[] | []> {
-    console.log("I am here", this.entityClass.name);
-    console.log("DB in BaseRepository:", this.db);
+  get getDb() {
+    return this.db;
+  }
 
+  async find(entity: Partial<T>) {
     const tableName = this.entityClass.name.toLowerCase();
     const keys = Object.keys(entity);
     const values = Object.values(entity);
@@ -22,7 +24,7 @@ export class BaseRepository<T> {
       sql += ` WHERE ${whereClause}`;
     }
 
-    return this.db.query<T[] | []>(sql, values);
+    return this.db.query<T>(this.entityClass, sql, values);
   }
 
   async persist<T>(entity: T): Promise<void> {}
