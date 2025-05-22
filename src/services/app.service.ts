@@ -1,8 +1,8 @@
 import { Injectable } from "../../core/decorators/injectable";
 import { EntityManager } from "../../core/infra/entityManager";
-import { SqlMapper } from "../../core/parser/sqlMapper";
 import { SchemaRootDto } from "../dtos/schema.dto";
 import { Users } from "../entities/schemas";
+import { SqlMapper } from "../parser";
 
 @Injectable()
 export class AppService extends EntityManager<Users> {

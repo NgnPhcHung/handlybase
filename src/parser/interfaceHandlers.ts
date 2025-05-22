@@ -1,7 +1,7 @@
 import { writeFile, mkdir } from "fs/promises";
-import { toCapitalize } from "../utils/string";
 import { FieldProperties } from "./sqlTokens";
 import { existsSync } from "fs";
+import { toCapitalize } from "../../core/utils";
 
 const header = `
 \`

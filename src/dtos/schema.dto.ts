@@ -1,12 +1,13 @@
 import {
+  IsArray,
   IsIn,
   IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from "class-validator";
-import { PropertyType } from "../../core/parser/sqlTokens";
 import { Type } from "class-transformer";
+import { PropertyType } from "../parser";
 
 const propertyType: PropertyType[] = ["number", "text"];
 
@@ -26,6 +27,20 @@ export class CollectionSchemaDto {
   @ValidateNested({ each: true })
   @Type(() => FieldPropertiesDto)
   fields!: Record<string, FieldPropertiesDto>;
+
+  @ValidateNested()
+  @IsArray()
+  @Type(() => SchemaReference)
+  references?: SchemaReference[];
+}
+
+export class SchemaReference {
+  @IsString()
+  key!: string;
+  @IsString()
+  targetTable!: string;
+  @IsString()
+  targetKey!: string;
 }
 
 export class FieldPropertiesDto {

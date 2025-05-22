@@ -38,9 +38,6 @@ importers:
       express-rate-limit:
         specifier: 7.5.0
         version: 7.5.0(express@5.1.0)
-      noname_orm:
-        specifier: ^0.0.4
-        version: 0.0.4
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
@@ -578,9 +575,6 @@ packages:
     resolution: {integrity: sha512-WDjw3pJ0/0jMFmyNDp3gvY2YizjLmmOUQo6DEBY+JgdvW/yQ9mEeSw6H5ythl5Ny2ytb7f9C2nIbjSxMNzbJXw==}
     engines: {node: '>=10'}
     hasBin: true
-
-  noname_orm@0.0.4:
-    resolution: {integrity: sha512-YOrubYE8M9vA/Jd+NuhPRZ6vbpXWRgbJcGrFEbT3sYSdMWMpfb0cVDOt2TglyZVx5BcAYvSF8gUKw+QH7cJv1A==}
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -1431,17 +1425,6 @@ snapshots:
       supports-color: 5.5.0
       touch: 3.1.1
       undefsafe: 2.0.5
-
-  noname_orm@0.0.4:
-    dependencies:
-      '@types/better-sqlite3': 7.6.13
-      better-sqlite3: 11.10.0
-      express: 5.1.0
-      express-rate-limit: 7.5.0(express@5.1.0)
-      reflect-metadata: 0.2.2
-      rimraf: 6.0.1
-    transitivePeerDependencies:
-      - supports-color
 
   normalize-path@3.0.0: {}
 
