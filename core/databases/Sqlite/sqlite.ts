@@ -1,5 +1,5 @@
 import SqliteDatabase from "better-sqlite3";
-import { EntityClass } from "../../types";
+import { EntityClass, NoIdEntityClass } from "../../types";
 import {
   BooleanValue,
   DatabaseClient,
@@ -148,6 +148,34 @@ export class SqliteClient extends DatabaseClient {
       });
     } catch (error) {
       throw new Error(`Failed to update ${entityName}: ${error}`);
+    }
+  }
+
+  async create<T>(
+    entityClass: EntityClass<T>,
+    data: NoIdEntityClass<T>,
+  ): Promise<T> {
+    const { entityName } = this.commonSettings({ entityClass });
+    try {
+      let insert = `INSERT INTO ${entityName} (`;
+
+      const insertData = Object.keys(data);
+      insertData.forEach((key, index) => {
+        insert += `${key}${index < insertData.length - 1 ? "," : ""}`;
+      });
+      insert += ") VALUES (";
+      insertData.forEach((key, index) => {
+        insert += `@${key}${index < insertData.length - 1 ? ", " : ""}`;
+      });
+      insert += ")";
+
+      this.db.prepare(insert).run(data);
+
+      return this.findOne(entityClass, { where: data });
+    } catch (error) {
+      throw new Error(
+        `Failed to save ${entityName}, rollback transaction ${error}`,
+      );
     }
   }
 

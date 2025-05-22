@@ -1,11 +1,6 @@
 import { container } from "../startApp";
-import { EntityClass, WhereOption } from "../types";
-import {
-  BooleanValue,
-  DatabaseClient,
-  MethodOptions,
-  SelectionOption,
-} from "./databaseClient";
+import { EntityClass, NoIdEntityClass } from "../types";
+import { BooleanValue, DatabaseClient, MethodOptions } from "./databaseClient";
 
 export class BaseRepository<T> {
   private db!: DatabaseClient;
@@ -38,5 +33,10 @@ export class BaseRepository<T> {
       selectValue,
     );
   }
+
+  async create(data: NoIdEntityClass<T>): Promise<T> {
+    return this.db.create(this.entityClass, data);
+  }
+
   async persist<T>(entity: T): Promise<void> {}
 }

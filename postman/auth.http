@@ -21,9 +21,9 @@ POST {{app_url}}/register
 Content-Type: application/json
 
 {
-  "username":"test_username",
+  "username":"test_username_1",
   "password":"123",
-  "email":"123"
+  "email":"12322"
 }
 
 ### Change password 

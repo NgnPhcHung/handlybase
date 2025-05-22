@@ -2,6 +2,7 @@ import { BaseRepository } from "../../core/databases/baseRepository";
 import { DatabaseClient } from "../../core/databases/databaseClient";
 import { Injectable } from "../../core/decorators/injectable";
 import { LoginDto } from "../dtos/login.dto";
+import { RegisterDto } from "../dtos/register.dto";
 import { Users } from "../entities/schemas";
 
 @Injectable()
@@ -38,6 +39,19 @@ export class UserService extends BaseRepository<Users> {
     });
 
     return res;
+  }
+
+  async register(payload: RegisterDto) {
+    const res = await this.findOne({
+      where: {
+        username: payload.username,
+      },
+    });
+    if (res) {
+      throw new Error("Username or password already exist");
+    }
+    const newEntity = await this.create(payload);
+    return newEntity;
   }
 
   // entityClass = Users;

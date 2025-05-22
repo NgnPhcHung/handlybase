@@ -1,8 +1,12 @@
-import { EntityClass } from "../types";
+import { EntityClass, NoIdEntityClass } from "../types";
 
 export abstract class DatabaseClient implements DatabaseMethods {
+  abstract create<T>(
+    entityClass: EntityClass<T>,
+    data: NoIdEntityClass<T>,
+  ): Promise<T>;
   abstract findOne<T>(
-    entity: EntityClass<T>,
+    entityClass: EntityClass<T>,
     opts?: MethodOptions<T>,
   ): Promise<T | null>;
   abstract find<T>(
@@ -10,7 +14,7 @@ export abstract class DatabaseClient implements DatabaseMethods {
     opts?: MethodOptions<T>,
   ): Promise<T[] | []>;
   abstract update<T>(
-    entity: EntityClass<T>,
+    entityClass: EntityClass<T>,
     target: Partial<EntityClass<T>> | string | number,
     updateValue: Partial<EntityClass<T>>,
     selectValue?: Partial<BooleanValue<T>>,
@@ -40,6 +44,11 @@ abstract class DatabaseMethods {
     target: Partial<EntityClass<T>> | string | number,
     updateValue: Partial<EntityClass<T>>,
     selectValue: Partial<BooleanValue<T>>,
+  ): Promise<T | null>;
+
+  abstract create<T>(
+    entity: EntityClass<T>,
+    data: NoIdEntityClass<T>,
   ): Promise<T | null>;
 }
 
