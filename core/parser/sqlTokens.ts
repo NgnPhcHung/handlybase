@@ -16,6 +16,9 @@ export enum SQLConstrains {
   AUTOINCREMENT = "AUTOINCREMENT",
   NOTNULL = "NOT NULL",
   UNIQUE = "UNIQUE",
+  NULL = "NULL",
+  DEFAULT = "DEFAULT",
+  COMMENT = "COMMENT",
 }
 
 export interface SchemaRoot {
@@ -25,7 +28,14 @@ export interface SchemaRoot {
 
 export interface CollectionSchema {
   name: string;
-  fields: Record<string, FieldProperties>;
+  references?: SchemaReference[];
+  fields: FieldProperties[];
+}
+
+export interface SchemaReference {
+  key: string;
+  targetTable: string;
+  targetKey: string;
 }
 
 export interface FieldProperties {
@@ -39,6 +49,7 @@ export interface FieldProperties {
   onupdate?: boolean;
   presentable?: boolean;
   default?: any;
+  note?: string;
 }
 
 export type PropertyType = "text" | "number" | "boolean";

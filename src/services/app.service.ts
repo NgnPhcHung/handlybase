@@ -10,8 +10,14 @@ export class AppService extends EntityManager<Users> {
 
   async handleSchemaImport(payload: SchemaRootDto) {
     const mapper = new SqlMapper(payload);
-    const res = mapper.createTableQuery();
-    this.db.exec(res.trim());
+    const { autoFunction, query } = mapper.createTableQuery();
+
+    console.log({ autoFunction, query });
+
+    Promise.all([
+      Promise.resolve(this.db.exec(query.trim())),
+      Promise.resolve(this.db.exec(autoFunction.trim())),
+    ]);
   }
 
   async createUser(body: any) {

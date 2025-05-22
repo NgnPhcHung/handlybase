@@ -11,7 +11,6 @@ import { SqliteConfig } from "../databaseConfig";
 interface CommonSettingOpts<T> extends MethodOptions<T> {
   entityClass: EntityClass<T>;
 }
-type KeysOfClass<T extends new (...args: any) => any> = keyof InstanceType<T>;
 export class SqliteClient extends DatabaseClient {
   private static instance: SqliteClient;
   private db!: SqliteDatabase.Database;
@@ -36,6 +35,7 @@ export class SqliteClient extends DatabaseClient {
       this.db = new SqliteDatabase(connectionString, rest);
       if (this.db) {
         console.log("Connected to SQLITE!!!!!");
+        this.db.pragma("foreign_keys = ON");
       } else {
         throw new Error("Cannot connect to database");
       }

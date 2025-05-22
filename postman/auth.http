@@ -1,12 +1,5 @@
 @app_url = localhost:50051/api/app/users
 
-### Create user
-# POST {{app_url}}/create-user
-# Content-Type: application/json
-#
-# {}
-
-
 ### login 
 POST {{app_url}}/login
 Content-Type: application/json
@@ -31,6 +24,7 @@ PUT {{app_url}}/change-password
 Content-Type: application/json
 
 {
+  "username":"test_username_1",
   "password":"123"
 }
 

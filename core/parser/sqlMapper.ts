@@ -4,6 +4,7 @@ import {
   SQLConstrains,
   SQLType,
   KeyWords,
+  SchemaReference,
 } from "./sqlTokens";
 import { interfaceHanlders } from "./interfaceHandlers";
 
@@ -18,20 +19,32 @@ export class SqlMapper {
     return this.inputSchema;
   }
 
-  private parseFields(
-    fields: Record<string, FieldProperties>,
-  ): FieldProperties[] {
-    return Object.values(fields);
-  }
-
   private mapFields(field: FieldProperties) {
     const name = `"${field.name}"`;
     const type = this.mapType(field);
 
     const constrains: string[] = [];
-    if (field.primarykey) constrains.push(KeyWords.primarykey);
+    if (field.primarykey) {
+      constrains.push(SQLConstrains.NOTNULL);
+      constrains.push(KeyWords.primarykey);
+    }
     if (field.autoincreasement) constrains.push(SQLConstrains.AUTOINCREMENT);
     if (field.unique) constrains.push(SQLConstrains.UNIQUE);
+
+    const required = !!field.required ? field.required : true;
+    if (!field.primarykey) {
+      constrains.push(required ? SQLConstrains.NOTNULL : SQLConstrains.NULL);
+    }
+
+    if (field.default !== undefined) {
+      constrains.push(
+        `${SQLConstrains.DEFAULT} ${field.type === "boolean" ? +field.default : field.default || ""}`,
+      );
+    }
+    if (field.onupdate)
+      constrains.push(`${SQLConstrains.DEFAULT} CURRENT_TIMESTAMP`);
+    if (field.oncreate)
+      constrains.push(`${SQLConstrains.DEFAULT} CURRENT_TIMESTAMP`);
 
     this.listOfPrimaryKeys(field);
     return `${name} ${type} ${constrains.join(" ")}`;
@@ -41,6 +54,13 @@ export class SqlMapper {
     if (!field.primarykey) return;
     if (field.primarykey && field.autoincreasement) return;
     this.primaryKeys.push(field.name);
+  }
+
+  private foreginKeys(references: SchemaReference[]) {
+    return references.reduce((acc, cur) => {
+      acc += `\n,FOREIGN KEY(${cur.key}) REFERENCES ${cur.targetTable}(${cur.targetKey}) ON DELETE CASCADE`;
+      return acc;
+    }, "");
   }
 
   private mapType(field: FieldProperties) {
@@ -53,33 +73,53 @@ export class SqlMapper {
     return type;
   }
 
+  private triggerUpdate(tableName: string, rowUpdate: string) {
+    const functionQuery = `CREATE TRIGGER update_${tableName}_${rowUpdate}
+AFTER UPDATE ON ${tableName} 
+FOR EACH ROW
+BEGIN
+  UPDATE ${tableName} 
+  SET ${rowUpdate} = CURRENT_TIMESTAMP
+  WHERE id = OLD.id;
+END;`;
+
+    return functionQuery;
+  }
+
   createTableQuery() {
     if (!this.inputSchema) {
       throw new Error("Failed to create databse, please try again");
     }
     const collections = this.inputSchema.collections;
-    let query = ``;
+    let query = "";
+    let autoFunction = "";
+    let foreignKeys = "";
 
     collections.forEach((collection) => {
       const interfaceHandler = interfaceHanlders(collection.name);
-
       query += `
         CREATE TABLE IF NOT EXISTS ${collection.name} `;
-      const fields = this.parseFields(collection.fields)
+      const fields = collection.fields
         .map((field) => {
           interfaceHandler.toPropety(field);
+          if (field.onupdate)
+            autoFunction +=
+              "\n" + this.triggerUpdate(collection.name, field.name);
           return this.mapFields(field);
         })
         .join(`, `);
+
+      if (!!collection.references) {
+        foreignKeys = this.foreginKeys(collection.references);
+      }
 
       const primaryKeys = this.primaryKeys.length
         ? `, \nPRIMARY KEY (${this.primaryKeys.join(",")})`
         : "";
 
-      interfaceHandler.toInterfaceFile();
-      query += `(\n${fields} ${primaryKeys})`;
+      query += `(\n${fields} ${primaryKeys} \n${foreignKeys});\n `;
       this.primaryKeys = [];
     });
-    return query;
+    return { query, autoFunction };
   }
 }

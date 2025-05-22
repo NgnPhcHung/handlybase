@@ -12,7 +12,7 @@ export class UserService extends BaseRepository<Users> {
   }
 
   async login(payload: LoginDto) {
-    const res = this.findOne({
+    const res = await this.findOne({
       where: {
         ...payload,
       },
@@ -29,12 +29,12 @@ export class UserService extends BaseRepository<Users> {
   }
 
   async changePassword(payload: { password: string }) {
-    const user = await this.findOne({ where: { id: 3 } });
+    const user = await this.findOne({ where: { id: 1 } });
     if (!user) {
       throw new Error("Username or password does not exist");
     }
 
-    const res = await this.update(user, {
+    const res = await this.update(1, {
       password: payload.password,
     });
 

@@ -9,31 +9,31 @@ Content-Type: application/json
   "collections": [
     {
       "name": "users",
-      "fields": {
-        "0": {
+      "fields": [
+        {
           "name": "id",
           "primarykey": true,
           "autoincreasement": true,
           "type": "number"
         },
-        "1": {
+        {
           "name": "username",
           "type": "text",
           "required": true,
           "unique": true
         },
-        "2": {
+        {
           "name": "email",
           "type": "text",
           "required": false,
           "unique": true
         },
-        "3": {
+        {
           "name": "password",
           "type": "text",
           "required": true
         },
-        "4": {
+        {
           "name": "updatedAt",
           "oncreate": false,
           "onupdate": true,
@@ -41,7 +41,7 @@ Content-Type: application/json
           "required": false,
           "presentable": false
         },
-        "5": {
+        {
           "name": "createdAt",
           "oncreate": true,
           "onupdate": false,
@@ -49,15 +49,58 @@ Content-Type: application/json
           "required": false,
           "presentable": false
         },
-        "6": {
+        {
           "name": "isActive",
           "type": "boolean",
           "required": true,
           "default": false
         }
-      }
+      ]
+    },
+    {
+      "name": "posts",
+      "references": [
+        {
+          "key":"author",
+          "targetTable": "users",
+          "targetKey": "id"
+        }
+      ],
+      "fields": [
+        {
+          "name": "id",
+          "primarykey": true,
+          "autoincreasement": true,
+          "type": "number"
+        },
+        {
+          "name": "updatedAt",
+          "oncreate": false,
+          "onupdate": true,
+          "type": "text",
+          "required": false,
+          "presentable": false
+        },
+        {
+          "name": "createdAt",
+          "oncreate": true,
+          "onupdate": false,
+          "type": "text",
+          "required": false,
+          "presentable": false
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "required": true,
+          "default": false
+        },
+        {
+          "name": "author",
+          "type": "number"
+        }
+      ]
     }
   ]
 }
-
 
