@@ -39,7 +39,7 @@ Content-Type: application/json
           "onupdate": true,
           "type": "text",
           "required": false,
-          "presentable": false
+          "ignore":true 
         },
         {
           "name": "createdAt",
@@ -47,7 +47,7 @@ Content-Type: application/json
           "onupdate": false,
           "type": "text",
           "required": false,
-          "presentable": false
+          "ignore":true 
         },
         {
           "name": "isActive",

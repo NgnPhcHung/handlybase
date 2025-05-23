@@ -7,10 +7,15 @@ import {
   SchemaReference,
 } from "./sqlTokens";
 import { interfaceHanlders } from "./interfaceHandlers";
+import Database from "better-sqlite3";
 
 export class SqlMapper {
   private inputSchema?: SchemaRoot;
   private primaryKeys: string[] = [];
+  private static db = new Database("database.db", {
+    verbose: console.log,
+  });
+
   constructor(data: SchemaRoot) {
     this.inputSchema = data;
   }

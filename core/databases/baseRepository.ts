@@ -13,6 +13,10 @@ export class BaseRepository<T> {
     return this.db;
   }
 
+  async execute(raw: string): Promise<any> {
+    return this.db.execute(raw);
+  }
+
   async find(opts: MethodOptions<T>): Promise<T[] | []> {
     return this.db.find<T>(this.entityClass, opts);
   }

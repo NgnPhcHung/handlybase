@@ -1,43 +1,26 @@
-import { Injectable } from "../../core/decorators/injectable";
-import { EntityManager } from "../../core/infra/entityManager";
+import { Injectable } from "@decorators";
 import { SchemaRootDto } from "../dtos/schema.dto";
 import { Users } from "../entities/schemas";
-import { SqlMapper } from "../parser";
+import { SqlMapper } from "@parser";
+import { BaseRepository } from "../../core/databases/baseRepository";
+import { DatabaseClient } from "../../core/databases/databaseClient";
 
 @Injectable()
-export class AppService extends EntityManager<Users> {
-  entityClass = Users;
+export class AppService extends BaseRepository<Users> {
+  constructor(db: DatabaseClient) {
+    super(Users);
+  }
 
   async handleSchemaImport(payload: SchemaRootDto) {
-    const mapper = new SqlMapper(payload);
-    const { autoFunction, query } = mapper.createTableQuery();
-
-    console.log({ autoFunction, query });
-
-    Promise.all([
-      Promise.resolve(this.db.exec(query.trim())),
-      Promise.resolve(this.db.exec(autoFunction.trim())),
-    ]);
+    try {
+      const mapper = new SqlMapper(payload);
+      const { autoFunction, query } = mapper.createTableQuery();
+      await Promise.all([
+        await this.execute(query.trim()),
+        await this.execute(autoFunction.trim()),
+      ]);
+    } catch (error) {
+      throw error;
+    }
   }
-
-  async createUser(body: any) {
-    const stmt = this.db.prepare(
-      "INSERT INTO users(username, email, password, updatedAt, createdAt, isActive) VALUES(@username, @email, @password, @updatedAt, @createdAt, @isActive)",
-    );
-    const queries = this.db.transaction((u) => {
-      stmt.run(...u);
-    });
-    queries([
-      {
-        username: "test2",
-        email: "test1@email.com",
-        password: "123",
-        updatedAt: "123333",
-        createdAt: "111",
-        isActive: 0,
-      },
-    ]);
-  }
-
-  async login(body: any) {}
 }

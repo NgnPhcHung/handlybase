@@ -23,10 +23,10 @@ export class CollectionSchemaDto {
   @IsString()
   name!: string;
 
-  @IsObject()
   @ValidateNested({ each: true })
+  @IsArray()
   @Type(() => FieldPropertiesDto)
-  fields!: Record<string, FieldPropertiesDto>;
+  fields!: FieldPropertiesDto[];
 
   @ValidateNested()
   @IsArray()

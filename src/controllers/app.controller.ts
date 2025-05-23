@@ -1,6 +1,4 @@
-import { Controller } from "../../core/decorators/controller";
-import { Post } from "../../core/decorators/methodDecorator";
-import { Body } from "../../core/decorators/paramsDecorator";
+import { Controller, Post, Body } from "@decorators";
 import { SchemaRootDto } from "../dtos/schema.dto";
 import { AppService } from "../services/app.service";
 import { UserController } from "./user.controller";
@@ -14,7 +12,6 @@ export class AppController {
 
   @Post("/import-schema")
   async importSchema(@Body() body: SchemaRootDto) {
-    this.appService.handleSchemaImport(body);
-    return true;
+    return this.appService.handleSchemaImport(body);
   }
 }

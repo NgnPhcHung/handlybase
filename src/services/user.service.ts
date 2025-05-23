@@ -1,6 +1,6 @@
+import { Injectable } from "@decorators";
 import { BaseRepository } from "../../core/databases/baseRepository";
 import { DatabaseClient } from "../../core/databases/databaseClient";
-import { Injectable } from "../../core/decorators/injectable";
 import { LoginDto } from "../dtos/login.dto";
 import { RegisterDto } from "../dtos/register.dto";
 import { Users } from "../entities/schemas";

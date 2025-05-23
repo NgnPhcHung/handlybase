@@ -1,6 +1,7 @@
 import { EntityClass, NoIdEntityClass } from "../types";
 
 export abstract class DatabaseClient implements DatabaseMethods {
+  abstract execute(raw: string): Promise<void>;
   abstract create<T>(
     entityClass: EntityClass<T>,
     data: NoIdEntityClass<T>,
@@ -50,6 +51,8 @@ abstract class DatabaseMethods {
     entity: EntityClass<T>,
     data: NoIdEntityClass<T>,
   ): Promise<T | null>;
+
+  abstract execute(raw: string): Promise<void>;
 }
 
 export interface MethodOptions<T> extends SelectionOption<T>, WhereOption<T> {}

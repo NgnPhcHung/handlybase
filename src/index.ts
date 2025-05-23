@@ -1,8 +1,9 @@
 import express, { Express } from "express";
 import "dotenv/config";
 import { AppController } from "./controllers/app.controller";
-import { bootstrapApp, container, DatabaseFactory, limiter } from "../core";
+import { bootstrapApp, container, DatabaseFactory } from "../core";
 import { DatabaseClient } from "../core/databases/databaseClient";
+import { limiter } from "@helpers";
 
 const app: Express = express();
 app.use(express.json());

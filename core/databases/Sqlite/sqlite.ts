@@ -51,6 +51,14 @@ export class SqliteClient extends DatabaseClient {
     return Promise.resolve(stmt.all(params) as T).catch((error) => error);
   }
 
+  async execute(raw: string): Promise<void> {
+    try {
+      this.db.exec(raw.trim());
+    } catch (error) {
+      throw new Error(`Failed to execute query:${error}`);
+    }
+  }
+
   async find<T>(
     entityClass: EntityClass<T>,
     { where, select }: MethodOptions<T>,
