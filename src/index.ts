@@ -1,9 +1,12 @@
+import "reflect-metadata";
+
 import express, { Express } from "express";
 import "dotenv/config";
-import { AppController } from "./controllers/app.controller";
-import { bootstrapApp, container, DatabaseFactory } from "../core";
 import { DatabaseClient } from "../core/databases/databaseClient";
-import { limiter } from "@helpers";
+import { DatabaseFactory } from "../core/databases/databaseFactory";
+import { container, bootstrapApp } from "../core/startApp";
+import { AppController } from "./controllers/app.controller";
+import { limiter } from "./helpers";
 
 const app: Express = express();
 app.use(express.json());

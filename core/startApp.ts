@@ -1,5 +1,6 @@
-import { Express, Request, Response } from "express";
 import "reflect-metadata";
+
+import { Express, Request, Response } from "express";
 import { Container } from "./containers";
 import { AnyClass } from "./types/object";
 

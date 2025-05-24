@@ -1,7 +1,6 @@
 import {
   IsArray,
   IsIn,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,

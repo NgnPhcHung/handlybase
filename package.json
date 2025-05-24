@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
+  "bin": "./dist/core/cli/migration.js",
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "cross-env NODE_ENV=production node -r tsconfig-paths/register dist/src/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts"
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "handly": "ts-node ./core/cli/migration.ts"
   },
   "keywords": [],
   "author": "Nguyen Phuc Hung",
@@ -18,17 +20,21 @@
     "better-sqlite3": "11.10.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",
+    "commander": "^14.0.0",
     "cross-env": "7.0.3",
     "dotenv": "16.5.0",
     "express": "5.1.0",
     "express-rate-limit": "7.5.0",
+    "inquirer": "^12.6.1",
     "reflect-metadata": "0.2.2",
     "rimraf": "6.0.1",
     "typescript": "5.8.3"
   },
   "devDependencies": {
+    "@types/inquirer": "^9.0.8",
     "nodemon": "^3.1.10",
-    "ts-node-dev": "^2.0.0",
-    "tsconfig-paths": "^4.2.0"
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.4"
   }
 }

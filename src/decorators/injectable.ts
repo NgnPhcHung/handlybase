@@ -1,3 +1,5 @@
-export function Injectable() {
-  return (target: any) => {};
+import "reflect-metadata";
+
+export function Injectable(): ClassDecorator {
+  return () => {};
 }

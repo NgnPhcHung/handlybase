@@ -1,8 +1,9 @@
-import { Controller, Post, Body } from "@decorators";
+import { Controller, Post, Body, Injectable } from "../decorators";
 import { SchemaRootDto } from "../dtos/schema.dto";
 import { AppService } from "../services/app.service";
 import { UserController } from "./user.controller";
 
+@Injectable()
 @Controller({
   path: "/app",
   children: [UserController],
@@ -12,6 +13,6 @@ export class AppController {
 
   @Post("/import-schema")
   async importSchema(@Body() body: SchemaRootDto) {
-    return this.appService.handleSchemaImport(body);
+    return this.appService.importSchema(body);
   }
 }

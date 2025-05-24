@@ -224,15 +224,6 @@ export class SqliteClient extends DatabaseClient {
     if (!select) {
       return "SELECT * FROM ";
     }
-
-    const propertyLength = Object.entries(select).length;
-    // let selectCondition = "SELECT ";
-    // Object.entries(select).map(([key, value], index) => {
-    //   if (typeof value !== "object") {
-    //     const comma = index < propertyLength - 1 ? ", " : "";
-    //     selectCondition += `${this.entity}.${key} ${comma}`;
-    //   }
-    // });
   }
 
   disconnect() {
