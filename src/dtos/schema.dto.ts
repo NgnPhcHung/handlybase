@@ -6,7 +6,7 @@ import {
   ValidateNested,
 } from "class-validator";
 import { Type } from "class-transformer";
-import { PropertyType } from "../parser";
+import { PropertyType } from "../../core/parser";
 
 const propertyType: PropertyType[] = ["number", "text"];
 

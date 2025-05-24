@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Put } from "../decorators";
+import { Controller, Post, Body, Put } from "../../core/decorators";
 import { LoginDto } from "../dtos/login.dto";
 import { RegisterDto } from "../dtos/register.dto";
 import { UserService } from "../services/user.service";

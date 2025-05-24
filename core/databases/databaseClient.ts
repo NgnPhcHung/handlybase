@@ -22,11 +22,7 @@ export abstract class DatabaseClient implements DatabaseMethods {
   ): Promise<T | null>;
 
   abstract connect(): Promise<void>;
-  abstract query<T>(
-    entity: EntityClass<T>,
-    sql: string,
-    params?: any[],
-  ): Promise<T>;
+  abstract query<T>(sql: string): Promise<T>;
 }
 
 abstract class DatabaseMethods {
@@ -53,6 +49,7 @@ abstract class DatabaseMethods {
   ): Promise<T | null>;
 
   abstract execute(raw: string): Promise<void>;
+  abstract query<T>(raw: string): Promise<T>;
 }
 
 export interface MethodOptions<T> extends SelectionOption<T>, WhereOption<T> {}

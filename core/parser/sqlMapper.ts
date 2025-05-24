@@ -59,7 +59,7 @@ export class SqlMapper {
 
   private foreginKeys(references: SchemaReference[]) {
     return references.reduce((acc, cur) => {
-      acc += `\n,FOREIGN KEY(${cur.key}) REFERENCES ${cur.targetTable}(${cur.targetKey}) ON DELETE CASCADE`;
+      acc += `,\n\tFOREIGN KEY(${cur.key}) REFERENCES ${cur.targetTable}(${cur.targetKey}) ON DELETE CASCADE`;
       return acc;
     }, "");
   }
@@ -92,23 +92,25 @@ END;`;
       throw new Error("Failed to create databse, please try again");
     }
     const collections = this.inputSchema.collections;
-    let query = "";
+    const query: string[] = [];
     let autoFunction = "";
     let foreignKeys = "";
 
     collections.forEach((collection) => {
       const interfaceHandler = interfaceHanlders(collection.name);
-      query += `
-        CREATE TABLE IF NOT EXISTS ${collection.name} `;
+      let subQuery = "";
+
+      subQuery += `
+CREATE TABLE IF NOT EXISTS ${collection.name} `;
       const fields = collection.fields
         .map((field) => {
           interfaceHandler.toPropety(field);
           if (field.onupdate)
             autoFunction +=
               "\n" + this.triggerUpdate(collection.name, field.name);
-          return this.mapFields(field);
+          return "\n\t" + this.mapFields(field);
         })
-        .join(`, `);
+        .join(`,`);
 
       if (!!collection.references) {
         foreignKeys = this.foreginKeys(collection.references);
@@ -118,8 +120,9 @@ END;`;
         ? `, \nPRIMARY KEY (${this.primaryKeys.join(",")})`
         : "";
 
-      query += `(\n${fields} ${primaryKeys} \n${foreignKeys});\n `;
+      subQuery += `(${fields} ${primaryKeys} ${foreignKeys}\n);\n`;
       this.primaryKeys = [];
+      query.push(subQuery);
     });
     return { query, autoFunction };
   }

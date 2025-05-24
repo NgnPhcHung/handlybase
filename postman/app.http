@@ -98,7 +98,13 @@ Content-Type: application/json
         {
           "name": "author",
           "type": "number"
+        },
+        {
+          "name": "subauthor",
+          "type": "text",
+          "default": "moew" 
         }
+
       ]
     }
   ]

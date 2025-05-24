@@ -1,9 +1,8 @@
-import { Controller, Post, Body, Injectable } from "../decorators";
+import { Controller, Post, Body } from "../../core/decorators";
 import { SchemaRootDto } from "../dtos/schema.dto";
 import { AppService } from "../services/app.service";
 import { UserController } from "./user.controller";
 
-@Injectable()
 @Controller({
   path: "/app",
   children: [UserController],

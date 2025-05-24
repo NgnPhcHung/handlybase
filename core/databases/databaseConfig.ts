@@ -4,19 +4,19 @@ export type DatabaseConfig = CommonConfig & SqliteConfig;
 
 interface MigrationOpts {
   migration: boolean;
-  talbe?: string;
+  table?: string;
   migrationFolder?: string;
 }
 
 type CommonConfig = {
   type: "sqlite";
-  migration?: MigrationOpts;
 };
 export type SqliteConfig = {
   config: {
     connectionString: string;
     verbose?: () => void;
     timeout?: number;
+    migration?: MigrationOpts;
   };
 };
 

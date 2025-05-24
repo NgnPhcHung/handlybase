@@ -26,6 +26,7 @@
     "express": "5.1.0",
     "express-rate-limit": "7.5.0",
     "inquirer": "^12.6.1",
+    "jsondiffpatch": "^0.7.3",
     "reflect-metadata": "0.2.2",
     "rimraf": "6.0.1",
     "typescript": "5.8.3"
