@@ -29,11 +29,11 @@ export class CollectionSchemaDto {
 
   @ValidateNested()
   @IsArray()
-  @Type(() => SchemaReference)
-  references?: SchemaReference[];
+  @Type(() => SchemaReferenceDto)
+  references?: SchemaReferenceDto[];
 }
 
-export class SchemaReference {
+export class SchemaReferenceDto {
   @IsString()
   key!: string;
   @IsString()
