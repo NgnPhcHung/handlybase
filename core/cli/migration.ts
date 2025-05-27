@@ -2,14 +2,13 @@
 
 import { program } from "commander";
 import { diff } from "deep-diff";
-import { readdirSync } from "fs";
 import { readFile } from "fs/promises";
 import * as path from "path";
 import { DatabaseClient } from "../databases/databaseClient";
 import { CollectionSchema, FieldProperties, SchemaReference } from "../parser";
 import { mapSQLProperties } from "../helpers/mapSqlSyntax";
 import { DatabaseType } from "../databases/databaseConfig";
-import { ensureDir, writeFile } from "../utils";
+import { ensureDir, getAllFiles, writeFile } from "../utils";
 
 export interface NormalizedCollectionSchema {
   name: string;
@@ -25,23 +24,6 @@ async function loadDatasource(filepath: string) {
   }
   return mod.datasource;
 }
-
-function getAllFiles(directoryPath: string) {
-  try {
-    const files = readdirSync(directoryPath);
-    return files.map((file) => file);
-  } catch (err) {
-    console.error("Error reading directory:", err);
-    return [];
-  }
-}
-
-const generateFieldSql = (properties: FieldProperties[]) => {
-  let query = `\n`;
-  properties.forEach((property) => {
-    query += `'${property.name}'`;
-  });
-};
 
 function convertSchemaToHashmap(
   input: any[],
@@ -110,7 +92,7 @@ const generateMigration = async (
         } else if (d.kind === "N" && d.path && d.path.length === 1) {
           const field = (d as any).rhs;
           upQueries.push(
-            `ALTER TABLE ${tableName} ADD COLUMN ${generateFieldSql(field)}`,
+            `ALTER TABLE ${tableName} ADD COLUMN ${mapSQLProperties(dbType, field)}`,
           );
           downQueries.push(
             `ALTER TABLE ${tableName} DROP COLUMN ${field.name}`,
@@ -131,7 +113,6 @@ const generateMigration = async (
           query += `\nINSERT INTO ${specTableName} SELECT * from ${specTableName}_temp`;
 
           upQueries.push(query);
-          // continue;
         }
       }
     }
@@ -189,11 +170,6 @@ program
       .slice(0, 14);
     const migrationFile = path.join(migrationDir, `${timestamp}_${name}.ts`);
 
-    const result = (await database.query(
-      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';",
-    )) as any[];
-    console.log(result);
-
     const migrationContent = `import { DatabaseClient } from "../../core/databases/databaseClient";
 
 
@@ -208,9 +184,5 @@ program
 
     await writeFile(migrationFile, migrationContent);
   });
-
-program.command("migration:list").action(async () => {
-  console.log(getAllFiles("handly/migration"));
-});
 
 program.parse(process.argv);

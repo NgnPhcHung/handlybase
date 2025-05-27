@@ -1,3 +1,4 @@
+import { readdirSync } from "fs";
 import * as fs from "fs/promises";
 
 export async function ensureDir(dirPath: string): Promise<void> {
@@ -31,5 +32,15 @@ export async function appendOrCreate(file: string, content: string) {
     await fs.appendFile(file, content);
   } catch {
     await fs.writeFile(file, content);
+  }
+}
+
+export function getAllFiles(directoryPath: string) {
+  try {
+    const files = readdirSync(directoryPath);
+    return files.map((file) => file);
+  } catch (err) {
+    console.error("Error reading directory:", err);
+    return [];
   }
 }
