@@ -32,7 +32,10 @@ export class SqliteClient extends DatabaseClient {
         config: { connectionString, ...rest },
       } = this.dbConfig;
 
-      this.db = new SqliteDatabase(connectionString, rest);
+      this.db = new SqliteDatabase(connectionString, {
+        ...rest,
+        verbose: console.log,
+      });
       if (this.db) {
         console.log("Connected to SQLITE!!!!!");
         this.db.pragma("foreign_keys = ON");
@@ -45,15 +48,14 @@ export class SqliteClient extends DatabaseClient {
       );
     }
   }
-  query<T = any>(_: EntityClass<T>, sql: string, params?: any[]): Promise<T> {
-    if (!this.db) throw new Error("DB not connected");
+  async query<T = any>(sql: string): Promise<T> {
     const stmt = this.db.prepare(sql);
-    return Promise.resolve(stmt.all(params) as T).catch((error) => error);
+    return Promise.resolve(stmt.all() as T).catch((error) => error);
   }
 
-  async execute(raw: string): Promise<void> {
+  async execute(raw: string) {
     try {
-      this.db.exec(raw.trim());
+      Promise.resolve(this.db.exec(raw.trim()));
     } catch (error) {
       throw new Error(`Failed to execute query:${error}`);
     }
@@ -224,15 +226,6 @@ export class SqliteClient extends DatabaseClient {
     if (!select) {
       return "SELECT * FROM ";
     }
-
-    const propertyLength = Object.entries(select).length;
-    // let selectCondition = "SELECT ";
-    // Object.entries(select).map(([key, value], index) => {
-    //   if (typeof value !== "object") {
-    //     const comma = index < propertyLength - 1 ? ", " : "";
-    //     selectCondition += `${this.entity}.${key} ${comma}`;
-    //   }
-    // });
   }
 
   disconnect() {

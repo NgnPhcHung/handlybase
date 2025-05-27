@@ -1,14 +1,14 @@
-import { Injectable } from "@decorators";
+import { AnyClass } from "../../core";
 import { BaseRepository } from "../../core/databases/baseRepository";
 import { DatabaseClient } from "../../core/databases/databaseClient";
+import { Injectable } from "../../core/decorators";
 import { LoginDto } from "../dtos/login.dto";
 import { RegisterDto } from "../dtos/register.dto";
-import { Users } from "../entities/schemas";
 
 @Injectable()
-export class UserService extends BaseRepository<Users> {
+export class UserService extends BaseRepository<AnyClass> {
   constructor(db: DatabaseClient) {
-    super(Users);
+    super({} as AnyClass);
   }
 
   async login(payload: LoginDto) {

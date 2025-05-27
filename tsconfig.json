@@ -5,29 +5,8 @@
     "experimentalDecorators": true, /* Enable experimental support for legacy experimental decorators. */
     "emitDecoratorMetadata": true, /* Emit design-type metadata for decorated declarations in source files. */
     /* Modules */
-    "module": "NodeNext", /* Specify what module code is generated. */
-    "moduleResolution": "NodeNext",
-    "baseUrl": "./src", /* Specify the base directory to resolve non-relative module names. */
-    "paths": {
-      "@decorators": [
-        "decorators/index.ts"
-      ],
-      "@decorators/*": [
-        "decorators/*"
-      ],
-      "@parser": [
-        "parser/index.ts"
-      ],
-      "@parser/*": [
-        "parser/*"
-      ],
-      "@helpers": [
-        "helpers/index.ts"
-      ],
-      "@helpers/*": [
-        "helpers/*"
-      ],
-    },
+    "module": "CommonJS", /* Specify what module code is generated. */
+    "moduleResolution": "Node",
     "outDir": "./dist", /* Specify an output folder for all emitted files. */
     "esModuleInterop": true, /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
     "forceConsistentCasingInFileNames": true, /* Ensure that casing is correct in imports. */

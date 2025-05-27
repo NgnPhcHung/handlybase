@@ -1,4 +1,14 @@
 
+`
+--------------------------------------------
+THIS FILE AUTOMATIC GENERATE, PLEASE DON'T TOUCH
+--------------------------------------------
+`
+
+
+
+
+ 
 export class Users {
 	id!: number;
 	username!: string;

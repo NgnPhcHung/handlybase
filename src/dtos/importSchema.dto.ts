@@ -1,5 +1,5 @@
-import { SchemaRoot } from "../../core/parser/sqlTokens";
+import { SchemaRoot } from "../../core/parser";
 
 export class ImportSchemaDto {
-  schema: SchemaRoot;
+  schema!: SchemaRoot;
 }

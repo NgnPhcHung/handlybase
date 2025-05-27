@@ -1,2 +1,2 @@
-export * from "./rateLimt";
+export * from "./rateLimit";
 export * from "./statusCode";

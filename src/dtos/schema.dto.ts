@@ -1,13 +1,12 @@
 import {
   IsArray,
   IsIn,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from "class-validator";
 import { Type } from "class-transformer";
-import { PropertyType } from "../parser";
+import { PropertyType } from "../../core/parser";
 
 const propertyType: PropertyType[] = ["number", "text"];
 
@@ -30,11 +29,11 @@ export class CollectionSchemaDto {
 
   @ValidateNested()
   @IsArray()
-  @Type(() => SchemaReference)
-  references?: SchemaReference[];
+  @Type(() => SchemaReferenceDto)
+  references?: SchemaReferenceDto[];
 }
 
-export class SchemaReference {
+export class SchemaReferenceDto {
   @IsString()
   key!: string;
   @IsString()
