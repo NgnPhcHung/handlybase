@@ -89,14 +89,19 @@
       },
       {
         "name": "author",
-        "type": "number",
-        "required": true
+        "type": "number"
       },
       {
         "name": "subauthor",
         "type": "text",
-        "default": "moew"
+        "default": "Nguyen Ngoc Anh"
+      },
+      {
+        "name": "notaauthor",
+        "type": "boolean",
+        "default": false
       }
+
     ]
   }
 ]

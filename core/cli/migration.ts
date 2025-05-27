@@ -62,7 +62,7 @@ const generateMigration = async (
   const oldMap = convertSchemaToHashmap(oldSchema);
   const newMap = convertSchemaToHashmap(newSchema);
 
-  oldSchema.forEach((table) => {
+  newSchema.forEach((table) => {
     const newRows = newMap.get(table.name);
     const oldRows = oldMap.get(table.name);
 
@@ -131,6 +131,10 @@ program
   .action(async (name: string, options: { config?: string }) => {
     const database: DatabaseClient = await loadDatasource(options.config!);
     database.connect();
+    let formatName = name.split(" ").join("_");
+    if (formatName === name) {
+      formatName = name;
+    }
 
     let dbType: DatabaseType;
     const typeOfDatabase = database.constructor.name.toLowerCase();
@@ -147,12 +151,11 @@ program
       return getTimestamp(b) - getTimestamp(a);
     });
     const [newSchema, oldSchema] = await Promise.all(
-      [sorted[0], sorted[1]].map(
-        async (file) =>
-          JSON.parse(
-            await readFile(path.join("handly/migration", file), "utf8"),
-          ) as CollectionSchema[],
-      ),
+      [sorted[0], sorted[1]].map(async (file) => {
+        return JSON.parse(
+          await readFile(path.join("handly/migration", file), "utf8"),
+        ) as CollectionSchema[];
+      }),
     );
 
     const generatedMigrations = await generateMigration(
@@ -168,19 +171,22 @@ program
       .toISOString()
       .replace(/[-:T.]/g, "")
       .slice(0, 14);
-    const migrationFile = path.join(migrationDir, `${timestamp}_${name}.ts`);
+    const migrationFile = path.join(
+      migrationDir,
+      `${timestamp}_${formatName}.ts`,
+    );
 
     const migrationContent = `import { DatabaseClient } from "../../core/databases/databaseClient";
 
 
-    export async function up(db: DatabaseClient): Promise<void> {
-        db.execute(\`${generatedMigrations.upQueries}\`)
-    }
+export async function up(db: DatabaseClient): Promise<void> {
+  db.execute(\`${generatedMigrations.upQueries}\`)
+}
 
-    export async function down(db: DatabaseClient): Promise<void> {
-        db.execute(\`${generatedMigrations.downQueries}\`)
-    }
-    `;
+export async function down(db: DatabaseClient): Promise<void> {
+  db.execute(\`${generatedMigrations.downQueries}\`)
+}
+`;
 
     await writeFile(migrationFile, migrationContent);
   });
