@@ -28,6 +28,7 @@ export interface SchemaRoot {
 
 export interface CollectionSchema {
   name: string;
+  map?: string;
   references?: SchemaReference[];
   fields: FieldProperties[];
 }

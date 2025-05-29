@@ -1,6 +1,7 @@
 [
   {
     "name": "users",
+    "map": "mapped_users",
     "fields": [
       {
         "name": "id",
@@ -92,16 +93,10 @@
         "type": "number"
       },
       {
-        "name": "subauthor",
-        "type": "text",
-        "default": "Nguyen Ngoc Anh"
-      },
-      {
-        "name": "notaauthor",
-        "type": "boolean",
-        "default": false
+        "name": "cc",
+        "type": "number",
+        "required": false
       }
-
     ]
   }
 ]

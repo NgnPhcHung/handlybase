@@ -1,6 +1,7 @@
 [
   {
     "name": "users",
+    "map": "mapped_users",
     "fields": [
       {
         "name": "id",
