@@ -28,4 +28,13 @@ Content-Type: application/json
   "password":"123"
 }
 
+### Change password 
+POST {{app_url}}/create-post
+Content-Type: application/json
+
+{
+  "author": 1,
+  "subAuthor": 2
+}
+
 

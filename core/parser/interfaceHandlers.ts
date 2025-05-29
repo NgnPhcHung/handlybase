@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import { mkdir, rm } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { appendOrCreate, toCapitalize } from "../../core/utils";
 import { FieldProperties } from "./sqlTokens";
 const header = `
@@ -36,7 +36,7 @@ export const interfaceHanlders = (name: string) => {
     const fileName = fname;
 
     try {
-      await rm(filePath, { recursive: true, force: true });
+      // await rm(filePath, { recursive: true, force: true });
       if (!existsSync(filePath)) {
         await mkdir(filePath, { recursive: true });
       }

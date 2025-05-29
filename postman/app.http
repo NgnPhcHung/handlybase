@@ -25,7 +25,6 @@ Content-Type: application/json
         {
           "name": "email",
           "type": "text",
-          "default": "test@email.com",
           "required": false
         },
         {
@@ -98,6 +97,10 @@ Content-Type: application/json
         {
           "name": "author",
           "type": "number"
+        },
+        {
+         "name" : "subAuthor",
+         "type" : "number"
         }
       ]
     }

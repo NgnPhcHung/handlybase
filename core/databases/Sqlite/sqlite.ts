@@ -55,6 +55,8 @@ export class SqliteClient extends DatabaseClient {
 
   async execute(raw: string) {
     try {
+      console.log(raw);
+
       Promise.resolve(this.db.exec(raw.trim()));
     } catch (error) {
       throw new Error(`Failed to execute query:${error}`);

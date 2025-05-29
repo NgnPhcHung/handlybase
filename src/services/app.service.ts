@@ -1,11 +1,11 @@
-import { SchemaRootDto } from "../dtos/schema.dto";
+import path from "path";
+import { AnyClass } from "../../core";
 import { BaseRepository } from "../../core/databases/baseRepository";
 import { DatabaseClient } from "../../core/databases/databaseClient";
 import { Injectable } from "../../core/decorators";
-import { AnyClass } from "../../core";
-import path from "path";
-import { appendOrCreate, ensureDir } from "../../core/utils";
 import { SqlMapper, interfaceHanlders } from "../../core/parser";
+import { appendOrCreate, ensureDir } from "../../core/utils";
+import { SchemaRootDto } from "../dtos/schema.dto";
 
 @Injectable()
 export class AppService extends BaseRepository<AnyClass> {

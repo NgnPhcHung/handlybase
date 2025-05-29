@@ -1,5 +1,5 @@
 import { DatabaseType } from "../databases/databaseConfig";
-import { FieldProperties, KeyWords, SQLConstrains } from "../parser";
+import { FieldProperties, KeyWords, SQLConstrains, SQLType } from "../parser";
 
 export const mapSQLProperties = (
   type: DatabaseType,
@@ -14,11 +14,21 @@ export const mapSQLProperties = (
   }
 };
 
+const mapType = (field: FieldProperties) => {
+  const type = SQLType[field.type];
+  if (!type)
+    throw new Error(`Invalid type provided for ${field.name} at ${field.type}`);
+
+  return type;
+};
+
 const sqliteTableProperties = (property: FieldProperties) => {
   const name = `"${property.name}"`;
   const type = "";
 
   const constrains: string[] = [];
+
+  constrains.push(mapType(property));
   if (property.primarykey) {
     constrains.push(SQLConstrains.NOTNULL);
     constrains.push(KeyWords.primarykey);
