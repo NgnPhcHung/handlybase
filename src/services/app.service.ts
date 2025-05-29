@@ -36,7 +36,7 @@ export class AppService extends BaseRepository<AnyClass> {
         content,
       );
 
-      const migrationDir = path.resolve(process.cwd(), "handly/migration");
+      const migrationDir = path.resolve(process.cwd(), "handly/snapshot");
       await ensureDir(migrationDir);
       const timestamp = new Date()
         .toISOString()

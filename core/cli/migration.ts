@@ -81,9 +81,7 @@ const mimicTable = (dbType: DatabaseType, table: CollectionSchema) => {
     .join(",\n");
 
   query += `\nCREATE TABLE ${tableName} (\n${newProperties}\n)`;
-  query += `\nINSERT INTO ${tableName} SELECT ${table.fields
-    .map((field) => `${tableTemp}.${field.name}`)
-    .join(", ")} from ${tableTemp}`;
+  query += `\nINSERT INTO ${tableName} SELECT * from ${tableTemp}`;
   query += `\nDROP TABLE ${tableTemp}`;
 
   return query;
@@ -101,9 +99,6 @@ const generateMigration = async (
   if (!differences) return { upQueries, downQueries };
 
   const groupDiff = Object.entries(groupByDiff(differences));
-
-  // const oldMap = convertSchemaToHashmap(oldSchema);
-  // const newMap = convertSchemaToHashmap(newSchema);
 
   for (const [, value] of groupDiff) {
     const valueKinds = value.map((v) => v.kind);
@@ -192,64 +187,6 @@ const generateMigration = async (
     }
   }
 
-  // newSchema.forEach((table) => {
-  //   const newRows = newMap.get(table.name);
-  //   // const oldRows = oldMap.get(table.name);
-  //
-  //   if (!newRows) {
-  //     // TODO : Create new table or delete
-  //   } else {
-  //     // const tableName = `${table.name}`;
-  //     console.log({ groupDiff });
-  //
-  //     // ============================
-  //     // for (
-  //     //   let difference = 0;
-  //     //   difference < differences.length;
-  //     //   difference += 2
-  //     // ) {
-  //     //   const d = differences[difference];
-  //     //
-  //     //   if (d.kind === "A") {
-  //     //     if (
-  //     //       d.item.kind === "D" &&
-  //     //       oldRows!.fields.has((d.item.lhs as unknown as FieldProperties).name)
-  //     //     ) {
-  //     //       const lhs = d.item.lhs as unknown as FieldProperties;
-  //     //
-  //     //       upQueries.push(`ALTER TABLE ${tableName} DROP COLUMN ${lhs.name}`);
-  //     //       downQueries.push(
-  //     //         `ALTER TABLE ${tableName} ADD COLUMN ${mapSQLProperties(dbType, lhs)}`,
-  //     //       );
-  //     //     }
-  //     //   } else if (d.kind === "N" && d.path && d.path.length === 1) {
-  //     //     const field = (d as any).rhs;
-  //     //     upQueries.push(
-  //     //       `ALTER TABLE ${tableName} ADD COLUMN ${mapSQLProperties(dbType, field)}`,
-  //     //     );
-  //     //     downQueries.push(
-  //     //       `ALTER TABLE ${tableName} DROP COLUMN ${field.name}`,
-  //     //     );
-  //     //   } else if (d.kind === "N" || d.kind === "E") {
-  //     //     const specTable = oldSchema[d.path?.[0]];
-  //     //
-  //     //     const specTableName = specTable.name;
-  //     //     if (tableName !== specTableName) {
-  //     //       continue;
-  //     //     }
-  //     //     let query = `ALTER TABLE ${specTableName} RENAME TO ${specTableName}_temp`;
-  //     //     const newProperties = table.fields
-  //     //       .map((field) => mapSQLProperties(dbType, field))
-  //     //       .join(",\n");
-  //     //
-  //     //     query += `\nCREATE TABLE ${specTableName} (\n${newProperties}\n)`;
-  //     //     query += `\nINSERT INTO ${specTableName} SELECT * from ${specTableName}_temp`;
-  //     //
-  //     //     upQueries.push(query);
-  //     //   }
-  //     // }
-  //   }
-  // });
   return { upQueries, downQueries };
 };
 
@@ -277,7 +214,7 @@ program
       throw "Can not found Database type";
     }
 
-    const migrationList = getAllFiles("handly/migration");
+    const migrationList = getAllFiles("handly/snapshot");
     const sorted = migrationList.sort((a, b) => {
       const getTimestamp = (s: string) => Number(s.match(/\d{14}/)?.[0] ?? 0);
 
@@ -286,7 +223,7 @@ program
     const [newSchema, oldSchema] = await Promise.all(
       [sorted[0], sorted[1]].map(async (file) => {
         return JSON.parse(
-          await readFile(path.join("handly/migration", file), "utf8"),
+          await readFile(path.join("handly/snapshot", file), "utf8"),
         ) as CollectionSchema[];
       }),
     );
@@ -296,14 +233,6 @@ program
       oldSchema,
       newSchema,
     );
-
-    console.log({ upQueries, downQueries });
-
-    // const generatedMigrations = await generateMigration(
-    //   dbType,
-    //   oldSchema,
-    //   newSchema,
-    // );
 
     const migrationDir = path.resolve(process.cwd(), "handly/migration");
     await ensureDir(migrationDir);
