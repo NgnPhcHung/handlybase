@@ -37,10 +37,8 @@ export async function appendOrCreate(file: string, content: string) {
 
 export function getAllFiles(directoryPath: string) {
   try {
-    const files = readdirSync(directoryPath);
-    return files.map((file) => file);
+    return readdirSync(directoryPath);
   } catch (err) {
-    console.error("Error reading directory:", err);
-    return [];
+    throw `Error reading directory: ${err}`;
   }
 }

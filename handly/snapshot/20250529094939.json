@@ -91,7 +91,7 @@
         "type": "number"
       },
       {
-        "name": "subAuthor",
+        "name": "nextAuthor",
         "type": "text"
       }
     ]

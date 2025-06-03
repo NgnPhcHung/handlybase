@@ -235,20 +235,36 @@ const get2LastestFile = async (directory: string) => {
   return { newSchema, oldSchema };
 };
 
+const getFilesByRange = async (endFile: string) => {
+  const directory = "handly/migration";
+  const migrationFiles = getAllFiles(directory);
+  const filesRevert: string[] = [];
+  const endIdx = migrationFiles.findIndex((file) => file.includes(endFile));
+  if (endIdx === -1) return;
+
+  migrationFiles.map((file, idx) => {
+    if (idx !== endIdx) {
+      filesRevert.push(file);
+    }
+  });
+
+  return filesRevert;
+};
+
 const executeMigration = async (database: DatabaseClient) => {
   const files = readdirSync("handly/migration")
     .filter((f) => f.endsWith(".ts"))
     .sort((a, b) => {
       const timeA = a.split("_")[0];
       const timeB = b.split("_")[0];
-      return timeB.localeCompare(timeA); // descending
+      return timeB.localeCompare(timeA);
     });
 
   const latestFile = files[0];
   const tsCode = readFileSync(`handly/migration/${latestFile}`, "utf-8");
   const { code: jsCode } = transformSync(tsCode, {
     loader: "ts",
-    format: "cjs", // use cjs to avoid ESM import issues
+    format: "cjs",
     target: "esnext",
   });
   const context: Record<string, any> = {
@@ -261,7 +277,16 @@ const executeMigration = async (database: DatabaseClient) => {
   };
 
   vm.createContext(context);
-
+  Promise.resolve(
+    database.execute(
+      'CREATE TABLE IF NOT EXISTS migrations( "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "title" text);',
+    ),
+  );
+  Promise.resolve(
+    database.execute(
+      `INSERT INTO migrations VALUES('${latestFile.split(".ts")[0]}');`,
+    ),
+  );
   const script = new vm.Script(jsCode + "\nup(db);");
   script.runInContext(context);
 };
@@ -311,17 +336,34 @@ program
     const migrationContent = `import { DatabaseClient } from "../../core/databases/databaseClient";
 
 
-    export async function up(db: DatabaseClient): Promise<void> {
-      db.execute(\`${upQueries.flatMap((d) => d)}\`)
-    }
+export async function up(db: DatabaseClient): Promise<void> {
+  db.execute(\`${upQueries.flatMap((d) => d)}\`)
+}
 
-    export async function down(db: DatabaseClient): Promise<void> {
-      db.execute(\`${downQueries.flatMap((d) => d)}\`)
-    }
+export async function down(db: DatabaseClient): Promise<void> {
+  db.execute(\`${downQueries.flatMap((d) => d)}\`)
+}
     `;
 
     await writeFile(migrationFile, migrationContent);
     await executeMigration(database);
+  });
+
+program
+  .command("migration:revert")
+  .option("-t, --to <file>", "Revert to destination file")
+  .option("-a, --all", "Revert all")
+  .description("Revert migration")
+  .action(async (options: { to?: string; all?: string }) => {
+    if (options.to) {
+      console.log("Revert migration to ", await getFilesByRange(options.to));
+      // executeMigration();
+    } else if (options.all) {
+      console.log("Revert all migration", getAllFiles("handly/migration"));
+      // executeMigration();
+    } else {
+      console.log("Revert to migration before");
+    }
   });
 
 program.parse(process.argv);

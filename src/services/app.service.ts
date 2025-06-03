@@ -1,3 +1,4 @@
+import { unlink } from "fs/promises";
 import path from "path";
 import { AnyClass } from "../../core";
 import { BaseRepository } from "../../core/databases/baseRepository";
@@ -19,6 +20,8 @@ export class AppService extends BaseRepository<AnyClass> {
       const { query } = mapper.createTableQuery();
 
       for await (const q of query) {
+        console.log(query);
+
         await this.execute(q.trim());
       }
 
@@ -30,6 +33,8 @@ export class AppService extends BaseRepository<AnyClass> {
         }
         content += "\n" + handler.values();
       }
+
+      await unlink("handly/schemas.ts");
       await interfaceHanlders("").toInterfaceFile(
         "./handly/",
         "schemas.ts",
