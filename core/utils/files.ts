@@ -1,5 +1,6 @@
 import { readdirSync } from "fs";
 import * as fs from "fs/promises";
+import * as path from "path";
 
 export async function ensureDir(dirPath: string): Promise<void> {
   try {
@@ -42,3 +43,35 @@ export function getAllFiles(directoryPath: string) {
     throw `Error reading directory: ${err}`;
   }
 }
+
+export const get2LastestFile = async (directory: string) => {
+  const migrationList = getAllFiles(directory);
+  const sorted = migrationList.sort((a, b) => {
+    const getTimestamp = (s: string) => Number(s.match(/\d{14}/)?.[0] ?? 0);
+
+    return getTimestamp(b) - getTimestamp(a);
+  });
+
+  const [newSchema, oldSchema] = await Promise.all(
+    [sorted[0], sorted[1]].map(async (file) => {
+      return JSON.parse(await fs.readFile(path.join(directory, file), "utf8"));
+    }),
+  );
+
+  return { newSchema, oldSchema };
+};
+
+export const getFilesByRange = async (directory: string, endFile: string) => {
+  const migrationFiles = getAllFiles(directory);
+  const filesRevert: string[] = [];
+  const endIdx = migrationFiles.findIndex((file) => file.includes(endFile));
+  if (endIdx === -1) return;
+
+  migrationFiles.map((file, idx) => {
+    if (idx !== endIdx) {
+      filesRevert.push(file);
+    }
+  });
+
+  return filesRevert;
+};
