@@ -42,9 +42,13 @@ const sqliteTableProperties = (property: FieldProperties) => {
   }
 
   if (property.default !== undefined) {
-    constrains.push(
-      `${SQLConstrains.DEFAULT} ${property.type === "boolean" ? +property.default : property.default || ""}`,
-    );
+    if (property.type === "text") {
+      constrains.push(`${SQLConstrains.DEFAULT} '${property.default || ""}'`);
+    } else {
+      constrains.push(
+        `${SQLConstrains.DEFAULT} ${property.type === "boolean" ? +property.default : property.default || ""}`,
+      );
+    }
   }
   if (property.onupdate)
     constrains.push(`${SQLConstrains.DEFAULT} CURRENT_TIMESTAMP`);

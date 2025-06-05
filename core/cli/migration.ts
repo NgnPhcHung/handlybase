@@ -13,6 +13,8 @@ import { mapSQLProperties } from "../helpers/mapSqlSyntax";
 import { CollectionSchema, FieldProperties, SchemaReference } from "../parser";
 import { ensureDir, getAllFiles, writeFile } from "../utils";
 
+type MigrationSingleQuery = { title: string };
+
 export interface NormalizedCollectionSchema {
   name: string;
   references?: SchemaReference[];
@@ -251,44 +253,95 @@ const getFilesByRange = async (endFile: string) => {
   return filesRevert;
 };
 
-const executeMigration = async (database: DatabaseClient) => {
-  const files = readdirSync("handly/migration")
-    .filter((f) => f.endsWith(".ts"))
-    .sort((a, b) => {
-      const timeA = a.split("_")[0];
-      const timeB = b.split("_")[0];
-      return timeB.localeCompare(timeA);
+const revertMigration = async (
+  database: DatabaseClient,
+  { migrationFiles }: { migrationFiles?: string[] } = {},
+) => {
+  try {
+    const files = readdirSync("handly/migration").filter((f) =>
+      f.endsWith(".ts"),
+    );
+
+    const lastIdx = files.length - 1;
+    const latestFile = files[lastIdx];
+    const tsCode = readFileSync(`handly/migration/${latestFile}`, "utf-8");
+    const { code: jsCode } = transformSync(tsCode, {
+      loader: "ts",
+      format: "cjs",
+      target: "esnext",
     });
+    const context: Record<string, any> = {
+      require,
+      console,
+      DatabaseClient,
+      db: database,
+      module: { exports: {} },
+      exports: {},
+    };
 
-  const latestFile = files[0];
-  const tsCode = readFileSync(`handly/migration/${latestFile}`, "utf-8");
-  const { code: jsCode } = transformSync(tsCode, {
-    loader: "ts",
-    format: "cjs",
-    target: "esnext",
-  });
-  const context: Record<string, any> = {
-    require,
-    console,
-    DatabaseClient,
-    db: database,
-    module: { exports: {} },
-    exports: {},
-  };
+    vm.createContext(context);
+    let query = `BEGIN TRANSACTION;\n`;
 
-  vm.createContext(context);
-  Promise.resolve(
-    database.execute(
-      'CREATE TABLE IF NOT EXISTS migrations( "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "title" text);',
-    ),
-  );
-  Promise.resolve(
-    database.execute(
-      `INSERT INTO migrations VALUES('${latestFile.split(".ts")[0]}');`,
-    ),
-  );
-  const script = new vm.Script(jsCode + "\nup(db);");
-  script.runInContext(context);
+    if (!!migrationFiles?.length) {
+      for (const migration of migrationFiles) {
+        query += `DELETE FROM migrations WHERE id = (SELECT migrations.id FROM migrations WHERE title = '${migration}'ORDER BY id DESC LIMIT 1);\n`;
+      }
+    }
+
+    query += `DELETE FROM migrations WHERE id = (SELECT migrations.id FROM migrations ORDER BY id DESC LIMIT 1);\n`;
+
+    await Promise.resolve(database.execute(query));
+    await Promise.resolve(database.execute("COMMIT TRANSACTION;"));
+    const script = new vm.Script(jsCode + "\ndown(db);");
+    script.runInContext(context);
+  } catch (error) {
+    console.log(error);
+    database.execute(`ROLLBACK TRANSACTION;`);
+  }
+};
+
+const excuteMigration = async (database: DatabaseClient, file?: string) => {
+  try {
+    let latestFile = file;
+    if (!file) {
+      const files = readdirSync("handly/migration").filter((f) =>
+        f.endsWith(".ts"),
+      );
+
+      const lastIdx = files.length - 1;
+      latestFile = files[lastIdx];
+    }
+    const tsCode = readFileSync(`handly/migration/${latestFile}`, "utf-8");
+    const { code: jsCode } = transformSync(tsCode, {
+      loader: "ts",
+      format: "cjs",
+      target: "esnext",
+    });
+    const context: Record<string, any> = {
+      require,
+      console,
+      DatabaseClient,
+      db: database,
+      module: { exports: {} },
+      exports: {},
+    };
+
+    vm.createContext(context);
+    Promise.resolve(
+      database.execute(
+        'CREATE TABLE IF NOT EXISTS migrations( "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "title" text);',
+      ),
+    );
+    Promise.resolve(
+      database.execute(
+        `INSERT INTO migrations (title) VALUES('${latestFile!.split(".ts")[0]}');`,
+      ),
+    );
+    const script = new vm.Script(jsCode + "\nup(db);");
+    script.runInContext(context);
+  } catch (error) {
+    console.log(`Error file execute migration, please try again: ${error}`);
+  }
 };
 
 program
@@ -346,23 +399,79 @@ export async function down(db: DatabaseClient): Promise<void> {
     `;
 
     await writeFile(migrationFile, migrationContent);
-    await executeMigration(database);
+    await excuteMigration(database);
   });
 
 program
   .command("migration:revert")
   .option("-t, --to <file>", "Revert to destination file")
   .option("-a, --all", "Revert all")
+  .option(
+    "-c, --config <path>",
+    "Path to the datasource config file",
+    "./datasource.ts",
+  )
   .description("Revert migration")
-  .action(async (options: { to?: string; all?: string }) => {
+  .action(async (options: { config?: string; to?: string; all?: string }) => {
+    const database: DatabaseClient = await loadDatasource(options.config!);
+    database.connect();
+
+    let dbType: DatabaseType;
+    const typeOfDatabase = database.constructor.name.toLowerCase();
+
+    if (typeOfDatabase.includes("sqlite")) {
+      dbType = "sqlite";
+      dbType;
+    } else {
+      throw "Can not found Database type";
+    }
+
     if (options.to) {
       console.log("Revert migration to ", await getFilesByRange(options.to));
-      // executeMigration();
+      const files = await getFilesByRange(options.to);
+      revertMigration(database, { migrationFiles: files });
     } else if (options.all) {
       console.log("Revert all migration", getAllFiles("handly/migration"));
-      // executeMigration();
+      const files = getAllFiles("handly/migration");
+      revertMigration(database, { migrationFiles: files });
+    } else if (options.to && options.all) {
+      throw "Error can not revert both state";
     } else {
       console.log("Revert to migration before");
+      revertMigration(database);
+    }
+  });
+
+program
+  .command("migration:run")
+  .option(
+    "-c, --config <path>",
+    "Path to the datasource config file",
+    "./datasource.ts",
+  )
+  .description("Run all migration")
+  .action(async (options: { config: string }) => {
+    const latestMigrationQuery = `SELECT title FROM migrations ORDER BY id DESC LIMIT 1;\n`;
+    const files = getAllFiles("handly/migration");
+    const database: DatabaseClient = await loadDatasource(options.config);
+    database.connect();
+
+    const latestMigration: MigrationSingleQuery[] =
+      await database.query(latestMigrationQuery);
+
+    let startIndex = files.indexOf(`${latestMigration[0].title}.ts`);
+    let remaningFiles = files.slice(startIndex + 1, files.length);
+
+    try {
+      while (remaningFiles.length > 0) {
+        const currentfile = remaningFiles[0];
+
+        await excuteMigration(database, `${currentfile}`);
+        remaningFiles.shift();
+      }
+    } catch (error) {
+      console.log(`Error while migration, please try again: ${error}`);
+      database.execute(`ROLLBACK TRANSACTION;`);
     }
   });
 

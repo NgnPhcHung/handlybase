@@ -1,19 +1,33 @@
 import { EntityClass, NoIdEntityClass } from "../types";
 
 export abstract class DatabaseClient implements DatabaseMethods {
-  abstract execute(raw: string): Promise<void>;
+  /**
+   * @Description Use to create an entity and return created entity
+   */
   abstract create<T>(
     entityClass: EntityClass<T>,
     data: NoIdEntityClass<T>,
   ): Promise<T>;
+
+  /**
+   * @Description Use to find an data from entity which return an object
+   */
   abstract findOne<T>(
     entityClass: EntityClass<T>,
     opts?: MethodOptions<T>,
   ): Promise<T | null>;
+
+  /**
+   * @Description Use to find an data from entity which return an array
+   */
   abstract find<T>(
     entityClass: EntityClass<T>,
     opts?: MethodOptions<T>,
   ): Promise<T[] | []>;
+
+  /**
+   * @Description Use to update an entity and return updated entity
+   */
   abstract update<T>(
     entityClass: EntityClass<T>,
     target: Partial<EntityClass<T>> | string | number,
@@ -21,8 +35,17 @@ export abstract class DatabaseClient implements DatabaseMethods {
     selectValue?: Partial<BooleanValue<T>>,
   ): Promise<T | null>;
 
-  abstract connect(): Promise<void>;
+  /**
+   * @Description Use for execute query that return something
+   */
   abstract query<T>(sql: string): Promise<T>;
+
+  /**
+   * @Description  Use for execute query which does not return anything
+   */
+  abstract execute(raw: string): Promise<void>;
+
+  abstract connect(): Promise<void>;
 }
 
 abstract class DatabaseMethods {
