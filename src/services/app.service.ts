@@ -1,12 +1,17 @@
 import { unlink } from "fs/promises";
 import path from "path";
-import { AnyClass } from "../../core";
-import { BaseRepository } from "../../core/databases/baseRepository";
-import { DatabaseClient } from "../../core/databases/databaseClient";
-import { Injectable } from "../../core/decorators";
-import { SqlMapper, interfaceHanlders } from "../../core/parser";
-import { appendOrCreate, ensureDir } from "../../core/utils";
+
 import { SchemaRootDto } from "../dtos/schema.dto";
+import {
+  appendOrCreate,
+  BaseRepository,
+  DatabaseClient,
+  ensureDir,
+  Injectable,
+  interfaceHanlders,
+  SqlMapper,
+} from "@core";
+import { AnyClass } from "@core/types";
 
 @Injectable()
 export class AppService extends BaseRepository<AnyClass> {

@@ -16,6 +16,11 @@
     "noUnusedLocals": true, /* Enable error reporting when local variables aren't read. */
     /* Completeness */
     "skipLibCheck": true, /* Skip type checking all .d.ts files. */
-    "declaration": true
+    "declaration": true,
+    "baseUrl":".",
+    "paths" :{
+      "@core":["core/index.ts"],
+      "@core/*": ["core/*"]
+    }
   }
 }

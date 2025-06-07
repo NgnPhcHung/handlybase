@@ -1,6 +1,4 @@
-import { BaseRepository } from "../../core/databases/baseRepository";
-import { DatabaseClient } from "../../core/databases/databaseClient";
-import { Injectable } from "../../core/decorators";
+import { BaseRepository, DatabaseClient, Injectable } from "@core";
 import { Posts } from "../../handly/schemas";
 
 @Injectable()

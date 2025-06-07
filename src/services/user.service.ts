@@ -1,9 +1,7 @@
-import { BaseRepository } from "../../core/databases/baseRepository";
-import { DatabaseClient } from "../../core/databases/databaseClient";
-import { Injectable } from "../../core/decorators";
-import { Users } from "../../handly/schemas";
-import { LoginDto } from "../dtos/login.dto";
-import { RegisterDto } from "../dtos/register.dto";
+import { BaseRepository, DatabaseClient, Injectable } from "@core";
+import { Users } from "handly/schemas";
+import { LoginDto } from "src/dtos/login.dto";
+import { RegisterDto } from "src/dtos/register.dto";
 
 @Injectable()
 export class UserService extends BaseRepository<Users> {
