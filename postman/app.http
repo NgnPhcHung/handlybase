@@ -100,8 +100,7 @@ Content-Type: application/json
         },
         {
          "name" : "subAuthor",
-         "type" : "number"
-        }
+         "type" : "number"        }
       ]
     }
   ]

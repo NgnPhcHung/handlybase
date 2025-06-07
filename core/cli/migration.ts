@@ -1,269 +1,120 @@
 #!/usr/bin/env node
 
 import { program } from "commander";
-import deepDiff, { diff } from "deep-diff";
 import { transformSync } from "esbuild";
 import { readdirSync, readFileSync } from "fs";
-import { readFile } from "fs/promises";
 import * as path from "path";
 import vm from "vm";
 import { DatabaseClient } from "../databases/databaseClient";
 import { DatabaseType } from "../databases/databaseConfig";
-import { mapSQLProperties } from "../helpers/mapSqlSyntax";
-import { CollectionSchema, FieldProperties, SchemaReference } from "../parser";
-import { ensureDir, getAllFiles, writeFile } from "../utils";
+import {
+  ensureDir,
+  get2LastestFile,
+  getAllFiles,
+  getFilesByRange,
+  writeFile,
+} from "../utils";
+import { generateMigration, loadDatasource } from "./migrationHelper";
 
-export interface NormalizedCollectionSchema {
-  name: string;
-  references?: SchemaReference[];
-  fields: Map<string, FieldProperties>;
-}
+const MIGRATION_DIRECTORY = "handly/migration";
 
-type Diff = deepDiff.Diff<CollectionSchema[], CollectionSchema[]>;
+type MigrationSingleQuery = { title: string };
 
-const groupByDiff = (input: Diff[]) => {
-  const grouped: Record<string, Diff[]> = {};
+const revertMigration = async (
+  database: DatabaseClient,
+  { migrationFiles }: { migrationFiles?: string[] } = {},
+) => {
+  try {
+    const files = readdirSync(MIGRATION_DIRECTORY).filter((f) =>
+      f.endsWith(".ts"),
+    );
 
-  for (const diff of input) {
-    if (!diff.path || diff.path.length === 0) continue;
-
-    const groupKey = diff.path[0];
-    if (!grouped[groupKey]) {
-      grouped[groupKey] = [];
-    }
-    grouped[groupKey].push(diff);
-  }
-
-  return grouped;
-};
-
-async function loadDatasource(filepath: string) {
-  const fullPath = path.resolve(process.cwd(), filepath);
-  const mod = await import(fullPath);
-  if (!mod.datasource) {
-    throw new Error("Datasource not exported as 'datasource'");
-  }
-  return mod.datasource;
-}
-
-export function convertSchemaToHashmap(
-  input: any[],
-): Map<string, NormalizedCollectionSchema> {
-  const result = new Map<string, NormalizedCollectionSchema>();
-
-  for (const table of input) {
-    const fieldMap = new Map<string, FieldProperties>();
-    for (const field of table.fields) {
-      fieldMap.set(field.name, field);
-    }
-
-    const tableDef: NormalizedCollectionSchema = {
-      name: table.name,
-      fields: fieldMap,
-      references: table.references || [],
+    const lastIdx = files.length - 1;
+    const latestFile = files[lastIdx];
+    const tsCode = readFileSync(
+      `${MIGRATION_DIRECTORY}/${latestFile}`,
+      "utf-8",
+    );
+    const { code: jsCode } = transformSync(tsCode, {
+      loader: "ts",
+      format: "cjs",
+      target: "esnext",
+    });
+    const context: Record<string, any> = {
+      require,
+      console,
+      DatabaseClient,
+      db: database,
+      module: { exports: {} },
+      exports: {},
     };
 
-    result.set(table.name, tableDef);
-  }
+    vm.createContext(context);
+    let query = `BEGIN TRANSACTION;\n`;
 
-  return result;
-}
-
-type PropertyKeys<T> = {
-  [K in keyof T]: K;
-};
-
-const mimicTable = (dbType: DatabaseType, table: CollectionSchema) => {
-  const tableName = table.name;
-  const tableTemp = `${table.name}_temp`;
-  console.log(`Need to create new table by using temp ${tableName}`);
-
-  let query = `ALTER TABLE ${tableName} RENAME TO ${tableTemp};`;
-  const newProperties = table.fields
-    .map((field) => mapSQLProperties(dbType, field))
-    .join(",\n");
-
-  query += `\nCREATE TABLE ${tableName} (\n${newProperties}\n);`;
-  query += `\nINSERT INTO ${tableName} SELECT * from ${tableTemp};`;
-  query += `\nDROP TABLE ${tableTemp};`;
-
-  return query;
-};
-
-const generateMigration = async (
-  dbType: DatabaseType,
-  oldSchema: CollectionSchema[],
-  newSchema: CollectionSchema[],
-) => {
-  let upQueries: string[] = [];
-  let downQueries: string[] = [];
-
-  const differences = diff(oldSchema, newSchema);
-  if (!differences) return { upQueries, downQueries };
-
-  const groupDiff = Object.entries(groupByDiff(differences));
-
-  for (let [, value] of groupDiff) {
-    const valueKinds = value.map((v) => v.kind);
-    for (const v of value) {
-      const table = newSchema[v.path?.[0]];
-      const oldTable = oldSchema[v.path?.[0]];
-      const tableName = newSchema[v.path?.[0]].name;
-      const changeTable = v.path?.[1] as PropertyKeys<keyof CollectionSchema>;
-
-      switch (changeTable) {
-        case "fields":
-        case "references":
-        case "name":
-          break;
-        case "map":
-          if (v.kind === "E") {
-            console.log("changing table name");
-
-            upQueries.push(`ALTER TABLE ${v.lhs}  RENAME TO ${v.rhs}`);
-            downQueries.push(`ALTER TABLE ${v.rhs}  RENAME TO ${v.lhs}`);
-          }
-          break;
-
-        default:
-          break;
+    if (!!migrationFiles?.length) {
+      for (const migration of migrationFiles) {
+        query += `DELETE FROM migrations WHERE id = (SELECT migrations.id FROM migrations WHERE title = '${migration}'ORDER BY id DESC LIMIT 1);\n`;
       }
-
-      if (valueKinds.includes("D")) {
-        upQueries.push(mimicTable(dbType, table));
-        downQueries.push(mimicTable(dbType, oldTable));
-        return { upQueries, downQueries };
-      }
-      switch (v.kind) {
-        case "N":
-          break;
-
-        case "D":
-          upQueries.push(mimicTable(dbType, table));
-          break;
-
-        case "E":
-          const changeField = v.path?.[3] as PropertyKeys<
-            keyof FieldProperties
-          >;
-          const relatedDiffs = value.filter(
-            (v) =>
-              v.kind === "E" &&
-              v.path?.[0] === v.path?.[0] && // same table
-              v.path?.[1] === "fields" &&
-              typeof v.path?.[2] === "number", // same field
-          );
-
-          const hasHeavyChange = relatedDiffs.some((v) => {
-            const key = v.path?.[3] as keyof FieldProperties;
-            return [
-              "type",
-              "default",
-              "primarykey",
-              "required",
-              "unique",
-            ].includes(key);
-          });
-
-          if (!hasHeavyChange && changeField === "name") {
-            console.log("changing column name");
-            const before = v.lhs;
-            const after = v.rhs;
-            upQueries.push(
-              `ALTER TABLE ${tableName} RENAME COLUMN ${before} TO ${after};`,
-            );
-            downQueries.push(
-              `ALTER TABLE ${tableName} RENAME COLUMN ${after} TO ${before};`,
-            );
-          } else if (hasHeavyChange) {
-            upQueries.push(mimicTable(dbType, table));
-          }
-          switch (changeField) {
-            case "name":
-              break;
-
-            case "type":
-            case "primarykey":
-            case "default":
-            case "required":
-            case "unique":
-              // upQueries.push(mimicTable(dbType, table));
-              break;
-
-            case "note":
-              console.log(`update note ${v.lhs} to ${v.rhs}`);
-              break;
-
-            default:
-              break;
-          }
-
-          break;
-
-        case "A":
-          if (v.item.kind === "D") {
-            console.log({ vdotkind: v.item.kind, lhs: v.item.lhs });
-          }
-          break;
-
-        default:
-          break;
-      }
-
-      value = value.filter((val) => val.kind !== v.kind);
-      console.log(value);
     }
+
+    query += `DELETE FROM migrations WHERE id = (SELECT migrations.id FROM migrations ORDER BY id DESC LIMIT 1);\n`;
+
+    await Promise.resolve(database.execute(query));
+    await Promise.resolve(database.execute("COMMIT TRANSACTION;"));
+    const script = new vm.Script(jsCode + "\ndown(db);");
+    script.runInContext(context);
+  } catch (error) {
+    console.log(error);
+    database.execute(`ROLLBACK TRANSACTION;`);
   }
-
-  return { upQueries, downQueries };
 };
 
-const get2LastestFile = async (directory: string) => {
-  const migrationList = getAllFiles(directory);
-  const sorted = migrationList.sort((a, b) => {
-    const getTimestamp = (s: string) => Number(s.match(/\d{14}/)?.[0] ?? 0);
+const excuteMigration = async (database: DatabaseClient, file?: string) => {
+  try {
+    let latestFile = file;
+    if (!file) {
+      const files = readdirSync(MIGRATION_DIRECTORY).filter((f) =>
+        f.endsWith(".ts"),
+      );
 
-    return getTimestamp(b) - getTimestamp(a);
-  });
-
-  const [newSchema, oldSchema] = await Promise.all(
-    [sorted[0], sorted[1]].map(async (file) => {
-      return JSON.parse(await readFile(path.join(directory, file), "utf8"));
-    }),
-  );
-
-  return { newSchema, oldSchema };
-};
-
-const executeMigration = async (database: DatabaseClient) => {
-  const files = readdirSync("handly/migration")
-    .filter((f) => f.endsWith(".ts"))
-    .sort((a, b) => {
-      const timeA = a.split("_")[0];
-      const timeB = b.split("_")[0];
-      return timeB.localeCompare(timeA); // descending
+      const lastIdx = files.length - 1;
+      latestFile = files[lastIdx];
+    }
+    const tsCode = readFileSync(
+      `${MIGRATION_DIRECTORY}/${latestFile}`,
+      "utf-8",
+    );
+    const { code: jsCode } = transformSync(tsCode, {
+      loader: "ts",
+      format: "cjs",
+      target: "esnext",
     });
+    const context: Record<string, any> = {
+      require,
+      console,
+      DatabaseClient,
+      db: database,
+      module: { exports: {} },
+      exports: {},
+    };
 
-  const latestFile = files[0];
-  const tsCode = readFileSync(`handly/migration/${latestFile}`, "utf-8");
-  const { code: jsCode } = transformSync(tsCode, {
-    loader: "ts",
-    format: "cjs", // use cjs to avoid ESM import issues
-    target: "esnext",
-  });
-  const context: Record<string, any> = {
-    require,
-    console,
-    DatabaseClient,
-    db: database,
-    module: { exports: {} },
-    exports: {},
-  };
-
-  vm.createContext(context);
-
-  const script = new vm.Script(jsCode + "\nup(db);");
-  script.runInContext(context);
+    vm.createContext(context);
+    Promise.resolve(
+      database.execute(
+        'CREATE TABLE IF NOT EXISTS migrations( "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "title" text);',
+      ),
+    );
+    Promise.resolve(
+      database.execute(
+        `INSERT INTO migrations (title) VALUES('${latestFile!.split(".ts")[0]}');`,
+      ),
+    );
+    const script = new vm.Script(jsCode + "\nup(db);");
+    script.runInContext(context);
+  } catch (error) {
+    console.log(`Error file execute migration, please try again: ${error}`);
+  }
 };
 
 program
@@ -296,7 +147,7 @@ program
       newSchema,
     );
 
-    const migrationDir = path.resolve(process.cwd(), "handly/migration");
+    const migrationDir = path.resolve(process.cwd(), MIGRATION_DIRECTORY);
     await ensureDir(migrationDir);
 
     const timestamp = new Date()
@@ -311,17 +162,93 @@ program
     const migrationContent = `import { DatabaseClient } from "../../core/databases/databaseClient";
 
 
-    export async function up(db: DatabaseClient): Promise<void> {
-      db.execute(\`${upQueries.flatMap((d) => d)}\`)
-    }
+export async function up(db: DatabaseClient): Promise<void> {
+  db.execute(\`${upQueries.flatMap((d) => d)}\`)
+}
 
-    export async function down(db: DatabaseClient): Promise<void> {
-      db.execute(\`${downQueries.flatMap((d) => d)}\`)
-    }
+export async function down(db: DatabaseClient): Promise<void> {
+  db.execute(\`${downQueries.flatMap((d) => d)}\`)
+}
     `;
 
     await writeFile(migrationFile, migrationContent);
-    await executeMigration(database);
+    await excuteMigration(database);
+  });
+
+program
+  .command("migration:revert")
+  .option("-t, --to <file>", "Revert to destination file")
+  .option("-a, --all", "Revert all")
+  .option(
+    "-c, --config <path>",
+    "Path to the datasource config file",
+    "./datasource.ts",
+  )
+  .description("Revert migration")
+  .action(async (options: { config?: string; to?: string; all?: string }) => {
+    const database: DatabaseClient = await loadDatasource(options.config!);
+    database.connect();
+
+    let dbType: DatabaseType;
+    const typeOfDatabase = database.constructor.name.toLowerCase();
+
+    if (typeOfDatabase.includes("sqlite")) {
+      dbType = "sqlite";
+      dbType;
+    } else {
+      throw "Can not found Database type";
+    }
+
+    if (options.to) {
+      console.log(
+        "Revert migration to ",
+        await getFilesByRange(MIGRATION_DIRECTORY, options.to),
+      );
+      const files = await getFilesByRange(MIGRATION_DIRECTORY, options.to);
+      revertMigration(database, { migrationFiles: files });
+    } else if (options.all) {
+      console.log("Revert all migration", getAllFiles(MIGRATION_DIRECTORY));
+      const files = getAllFiles(MIGRATION_DIRECTORY);
+      revertMigration(database, { migrationFiles: files });
+    } else if (options.to && options.all) {
+      throw "Error can not revert both state";
+    } else {
+      console.log("Revert to migration before");
+      revertMigration(database);
+    }
+  });
+
+program
+  .command("migration:run")
+  .option(
+    "-c, --config <path>",
+    "Path to the datasource config file",
+    "./datasource.ts",
+  )
+  .description("Run all migration")
+  .action(async (options: { config: string }) => {
+    const latestMigrationQuery = `SELECT title FROM migrations ORDER BY id DESC LIMIT 1;\n`;
+    const files = getAllFiles(MIGRATION_DIRECTORY);
+    const database: DatabaseClient = await loadDatasource(options.config);
+    database.connect();
+
+    const latestMigration: MigrationSingleQuery[] =
+      await database.query(latestMigrationQuery);
+
+    let startIndex = files.indexOf(`${latestMigration[0].title}.ts`);
+    let remaningFiles = files.slice(startIndex + 1, files.length);
+
+    try {
+      while (remaningFiles.length > 0) {
+        const currentfile = remaningFiles[0];
+
+        await excuteMigration(database, `${currentfile}`);
+        remaningFiles.shift();
+      }
+    } catch (error) {
+      console.log(`Error while migration, please try again: ${error}`);
+      database.execute(`ROLLBACK TRANSACTION;`);
+    }
   });
 
 program.parse(process.argv);
