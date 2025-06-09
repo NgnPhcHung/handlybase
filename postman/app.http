@@ -106,3 +106,17 @@ Content-Type: application/json
   ]
 }
 
+### check health
+
+POST {{app_url}}/check-health
+Content-Type: application/json
+Connection: keep-alive
+Authorization: Bearer mock_token_123
+X-Request-Id: mock-req-id-456
+X-User-Id: mock-user-id-789
+X-Role: admin
+X-Correlation-Id: abc123-correlation-id
+X-Service-Name: post-service
+
+{}
+

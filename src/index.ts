@@ -19,10 +19,11 @@ async function bootstrap() {
   app.use(limiter());
   app.use(
     cors({
-      origin: "http://localhost:3000", // Cho phép gọi từ frontend Next.js
+      origin: "http://localhost:3000",
       credentials: true,
     }),
   );
+
   container.register(DatabaseClient, db);
 
   bootstrapApp({
