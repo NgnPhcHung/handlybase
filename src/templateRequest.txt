@@ -1,4 +1,3 @@
-@app_url = localhost:50051/api/app
 
 ### Import schema
 POST {{app_url}}/import-schema
@@ -8,13 +7,29 @@ Content-Type: application/json
   "dbname": "test",
   "collections": [
     {
-      "name": "_super_database",
+      "name": "users",
       "fields": [
         {
           "name": "id",
           "primarykey": true,
           "autoincreasement": true,
           "type": "number"
+        },
+        {
+          "name": "username",
+          "type": "text",
+          "required": true,
+          "unique": true
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "password",
+          "type": "text",
+          "required": true
         },
         {
           "name": "updatedAt",
@@ -33,20 +48,22 @@ Content-Type: application/json
           "ignore":true 
         },
         {
-          "name": "username",
-          "type": "text",
+          "name": "isActive",
+          "type": "boolean",
           "required": true,
-          "unique": true
-        },
-        {
-          "name": "password",
-          "type": "text",
-          "required": true
+          "default": false
         }
       ]
     },
     {
-      "name": "_app_settings",
+      "name": "posts",
+      "references": [
+        {
+          "key":"author",
+          "targetTable": "users",
+          "targetKey": "id"
+        }
+      ],
       "fields": [
         {
           "name": "id",
@@ -77,44 +94,15 @@ Content-Type: application/json
           "default": false
         },
         {
-          "name": "basicAuth",
-          "type": "boolean",
-          "default": true
+          "name": "author",
+          "type": "number"
         },
         {
-         "name" : "googleAuth",
-         "type" : "boolean",
-         "default": false
-        },
-        {
-          "name": "authenticationType",
-          "type": "text",
-          "default": "jsonwebtoken"
-        }
+         "name" : "subAuthor",
+         "type" : "number"        }
       ]
     }
   ]
 }
 
-### check health
 
-POST {{app_url}}/check-health
-Content-Type: application/json
-Connection: keep-alive
-Authorization: Bearer mock_token_123
-X-Request-Id: mock-req-id-456
-X-User-Id: mock-user-id-789
-X-Role: admin
-X-Correlation-Id: abc123-correlation-id
-X-Service-Name: post-service
-
-{}
-
-### login
-POST {{app_url}}/admin-login
-Content-Type: application/json
-
-{
-  "username": "superhandlyadmin",
-  "password":"thisistrongpassowrd@123"
-}

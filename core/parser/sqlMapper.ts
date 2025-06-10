@@ -38,9 +38,12 @@ export class SqlMapper {
     }
 
     if (field.default !== undefined) {
-      constrains.push(
-        `${SQLConstrains.DEFAULT} ${field.type === "boolean" ? +field.default : field.default || ""}`,
-      );
+      if (field.type === "boolean") {
+        constrains.push(`${SQLConstrains.DEFAULT} ${+field.default}`);
+      }
+      if (field.type !== "number") {
+        constrains.push(`${SQLConstrains.DEFAULT} '${field.default}'`);
+      }
     }
     if (field.onupdate)
       constrains.push(`${SQLConstrains.DEFAULT} CURRENT_TIMESTAMP`);

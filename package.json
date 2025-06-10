@@ -10,7 +10,8 @@
     "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:ui\"",
     "dev:server": "ts-node-dev --respawn -r tsconfig-paths/register src/index.ts",
     "dev:ui": "pnpm --filter ./ui dev",
-    "handly": "ts-node ./core/cli/migration.ts"
+    "handly:migration": "ts-node ./core/cli/migration.ts",
+    "handly:hash": "ts-node ./core/cli/hash.ts"
   },
   "keywords": [],
   "author": "Nguyen Phuc Hung",
@@ -18,7 +19,9 @@
   "dependencies": {
     "@types/better-sqlite3": "7.6.13",
     "@types/express": "5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "22.15.18",
+    "bcryptjs": "^3.0.2",
     "better-sqlite3": "11.10.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",
@@ -32,6 +35,7 @@
     "express-rate-limit": "7.5.0",
     "inquirer": "^12.6.1",
     "jsondiffpatch": "^0.7.3",
+    "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "reflect-metadata": "0.2.2",
     "rimraf": "6.0.1",

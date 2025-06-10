@@ -9,21 +9,20 @@ THIS FILE AUTOMATIC GENERATE, PLEASE DON'T TOUCH
 
 
  
-export class Users {
+export class SuperDatabase {
 	id!: number;
-	username!: string;
-	email?: string;
-	password!: string;
 	updatedAt?: string;
 	createdAt?: string;
-	isActive!: boolean;
+	username!: string;
+	password!: string;
 }
 
-export class Posts {
+export class AppSettings {
 	id!: number;
 	updatedAt?: string;
 	createdAt?: string;
 	isActive!: boolean;
-	author!: number;
-	subAuthor!: number;
+	basicAuth!: boolean;
+	googleAuth!: boolean;
+	authenticationType!: string;
 }
