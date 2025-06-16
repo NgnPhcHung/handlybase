@@ -118,7 +118,7 @@ const excuteMigration = async (database: DatabaseClient, file?: string) => {
 };
 
 program
-  .command("create <name>")
+  .command("migration:create <name>")
   .option(
     "-c, --config <path>",
     "Path to the datasource config file",
@@ -163,7 +163,7 @@ program
 
 
 export async function up(db: DatabaseClient): Promise<void> {
-  db.execute(\`${upQueries.flatMap((d) => d)}\`)
+  db.execute(\`${upQueries.flatMap((d) => d).join("\n")}\`)
 }
 
 export async function down(db: DatabaseClient): Promise<void> {
@@ -176,7 +176,7 @@ export async function down(db: DatabaseClient): Promise<void> {
   });
 
 program
-  .command("revert")
+  .command("migration:revert")
   .option("-t, --to <file>", "Revert to destination file")
   .option("-a, --all", "Revert all")
   .option(
@@ -219,7 +219,7 @@ program
   });
 
 program
-  .command("run")
+  .command("migration:run")
   .option(
     "-c, --config <path>",
     "Path to the datasource config file",

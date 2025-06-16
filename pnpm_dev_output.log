@@ -1,0 +1,43 @@
+
+> handybase@1.0.0 dev /Users/nguyenphuchung/Documents/personal_project/handlybase
+> concurrently "pnpm dev:server" "pnpm dev:ui"
+
+[0] 
+[0] > handybase@1.0.0 dev:server /Users/nguyenphuchung/Documents/personal_project/handlybase
+[0] > ts-node-dev --respawn -r tsconfig-paths/register src/index.ts
+[0] 
+[1] 
+[1] > handybase@1.0.0 dev:ui /Users/nguyenphuchung/Documents/personal_project/handlybase
+[1] > pnpm --filter ./ui dev
+[1] 
+[1] 
+[1] > ui@0.1.0 dev /Users/nguyenphuchung/Documents/personal_project/handlybase/ui
+[1] > next dev --turbopack
+[1] 
+[0] [INFO] 22:09:45 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.8.3)
+[1]    ▲ Next.js 15.3.3 (Turbopack)
+[1]    - Local:        http://localhost:3000
+[1]    - Network:      http://192.168.100.34:3000
+[1] 
+[1]  ✓ Starting...
+[0] { arg: 'Request.checkHeath' }
+[0] {}
+[0] { arg: 'UserRole.Admin' }
+[0] Connected to SQLITE!!!!!
+[0] PRAGMA foreign_keys = ON
+[0] Running on:  50051
+[0] [Handly bootstrap] route: {
+[0]   method: 'post',
+[0]   path: '/api/app/check-health',
+[0]   handler: 'checkHeath'
+[0] }
+[0] [Handly bootstrap] route: {
+[0]   method: 'post',
+[0]   path: '/api/app/import-schema',
+[0]   handler: 'importSchema'
+[0] }
+[0] [Handly bootstrap] route: { method: 'post', path: '/api/app/admin-login', handler: 'login' }
+[1]  ✓ Ready in 728ms
+[0] pnpm dev:server exited with code 0
+[1] [?25h
+[1] pnpm dev:ui exited with code 0

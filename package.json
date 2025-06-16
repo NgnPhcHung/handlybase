@@ -10,7 +10,7 @@
     "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:ui\"",
     "dev:server": "ts-node-dev --respawn -r tsconfig-paths/register src/index.ts",
     "dev:ui": "pnpm --filter ./ui dev",
-    "handly:migration": "ts-node ./core/cli/migration.ts",
+    "handly": "ts-node ./core/cli/migration.ts",
     "handly:hash": "ts-node ./core/cli/hash.ts"
   },
   "keywords": [],

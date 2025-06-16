@@ -53,8 +53,11 @@ export const get2LastestFile = async (directory: string) => {
   });
 
   const [newSchema, oldSchema] = await Promise.all(
-    [sorted[0], sorted[1]].map(async (file) => {
-      return JSON.parse(await fs.readFile(path.join(directory, file), "utf8"));
+    [sorted[0], sorted[1] || []].map(async (file) => {
+      if (!!file && typeof file === "string")
+        return JSON.parse(
+          await fs.readFile(path.join(directory, file), "utf8"),
+        );
     }),
   );
 
