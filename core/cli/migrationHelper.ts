@@ -81,85 +81,6 @@ export const mimicTable = (dbType: DatabaseType, table: CollectionSchema) => {
   return query;
 };
 
-function mapToSqlType(type: "number" | "text" | "boolean"): string {
-  switch (type) {
-    case "number":
-      return "INTEGER";
-    case "text":
-      return "TEXT";
-    case "boolean":
-      return "INTEGER";
-    default:
-      throw new Error(`Unsupported type: ${type}`);
-  }
-}
-
-function generateSqlSchema(schema: CollectionSchema[]): string[] {
-  const sqlStatements: string[] = [];
-
-  for (const table of schema) {
-    const tableName = table.name;
-    const columns: string[] = [];
-
-    for (const field of table.fields) {
-      let columnDefinition = `${field.name} ${mapToSqlType(field.type)}`;
-
-      if (field.primarykey) {
-        if (field.type === "number") {
-          columnDefinition += " PRIMARY KEY";
-          if (field.autoincreasement) {
-            columnDefinition += " AUTOINCREMENT";
-          }
-        } else {
-          console.warn(
-            `Warning: Primary key '${field.name}' in table '${tableName}' is not of type 'number'. AUTOINCREMENT will be ignored.`,
-          );
-          columnDefinition += " PRIMARY KEY";
-        }
-      }
-
-      if (field.required) {
-        columnDefinition += " NOT NULL";
-      }
-
-      if (field.unique) {
-        columnDefinition += " UNIQUE";
-      }
-
-      // Default values
-      if (field.default !== undefined) {
-        let defaultValue = field.default;
-        if (typeof defaultValue === "string") {
-          defaultValue = `'${defaultValue}'`;
-        }
-        if (field.type === "boolean") {
-          columnDefinition += ` DEFAULT ${defaultValue === "true" ? 1 : 0}`;
-        } else {
-          columnDefinition += ` DEFAULT ${defaultValue}`;
-        }
-      } else if (field.oncreate) {
-        columnDefinition += ` DEFAULT CURRENT_TIMESTAMP`;
-      } else if (field.onupdate) {
-        columnDefinition += ` DEFAULT CURRENT_TIMESTAMP`;
-      }
-
-      columns.push(columnDefinition);
-    }
-
-    if (columns.length === 0) {
-      console.warn(
-        `Warning: Table '${tableName}' has no valid fields to create.`,
-      );
-      continue;
-    }
-
-    const createTableSql = `CREATE TABLE IF NOT EXISTS ${tableName} (\n  ${columns.join(",\n  ")}\n);`;
-    sqlStatements.push(createTableSql);
-  }
-
-  return sqlStatements;
-}
-
 export const generateMigration = async (
   dbType: DatabaseType,
   oldSchema: CollectionSchema[],
@@ -167,12 +88,6 @@ export const generateMigration = async (
 ) => {
   let upQueries: string[] = [];
   let downQueries: string[] = [];
-
-  if (oldSchema === undefined) {
-    const query = generateSqlSchema(newSchema);
-    query.map((q) => upQueries.push(q));
-    return { upQueries, downQueries };
-  }
 
   const differences = diff(oldSchema, newSchema);
   if (!differences) return { upQueries, downQueries };
