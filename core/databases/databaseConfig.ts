@@ -20,8 +20,11 @@ export type SqliteConfig = {
   };
 };
 
-export type SqlConfig = {
+export type PostgresConfig = {
   config: {
-    sqlConfig?: number;
+    connectionString: string;
+    verbose?: () => void;
+    timeout?: number;
+    migration?: MigrationOpts;
   };
 };

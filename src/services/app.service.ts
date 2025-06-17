@@ -1,17 +1,27 @@
 import { unlink } from "fs/promises";
 import path from "path";
-import { AnyClass } from "../../core";
-import { BaseRepository } from "../../core/databases/baseRepository";
-import { DatabaseClient } from "../../core/databases/databaseClient";
-import { Injectable } from "../../core/decorators";
-import { SqlMapper, interfaceHanlders } from "../../core/parser";
-import { appendOrCreate, ensureDir } from "../../core/utils";
+import JWT from "jsonwebtoken";
+
 import { SchemaRootDto } from "../dtos/schema.dto";
+import {
+  appendOrCreate,
+  BaseRepository,
+  DatabaseClient,
+  ensureDir,
+  HttpStatus,
+  Injectable,
+  interfaceHanlders,
+  SqlMapper,
+} from "@core";
+import { LoginDto } from "src/dtos/login.dto";
+import bcrypt from "bcryptjs";
+import { USER_ROLE } from "handly/consts";
+import { _SUPER_DATABASE } from "handly/adminSettings";
 
 @Injectable()
-export class AppService extends BaseRepository<AnyClass> {
+export class AppService extends BaseRepository<_SUPER_DATABASE> {
   constructor(db: DatabaseClient) {
-    super({} as AnyClass);
+    super(_SUPER_DATABASE);
   }
 
   async importSchema(payload: SchemaRootDto) {
@@ -20,10 +30,11 @@ export class AppService extends BaseRepository<AnyClass> {
       const { query } = mapper.createTableQuery();
 
       for await (const q of query) {
-        console.log(query);
-
         await this.execute(q.trim());
       }
+      this.execute(` INSERT INTO _super_database (username, password)
+VALUES ('${process.env.ADMIN_USERNAME}', '${process.env.ADMIN_PASSWORD_HASH}');
+`);
 
       let content = "";
       for (const collection of payload.collections) {
@@ -52,5 +63,39 @@ export class AppService extends BaseRepository<AnyClass> {
     } catch (error) {
       throw error;
     }
+  }
+
+  async login(body: LoginDto) {
+    const admin = await this.findOne({ where: { username: body.username } });
+
+    if (!admin) {
+      throw new Error(HttpStatus.UNAUTHORIZED.toString());
+    }
+
+    const descryped = bcrypt.compareSync(body.password, admin.password);
+
+    if (!descryped) {
+      throw new Error(HttpStatus.UNAUTHORIZED.toString());
+    }
+    const accessToken = JWT.sign(
+      { id: admin.id, role: USER_ROLE.SUPER_ADMIN },
+      process.env.JWT_ACCESS_SECRET_KEY || "",
+      {
+        expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRED_IN) || 15 * 60,
+      },
+    );
+    const refreshToken = JWT.sign(
+      { id: admin.id, role: USER_ROLE.SUPER_ADMIN },
+      process.env.JWT_REFRESH_SECRET_KEY || "",
+      {
+        expiresIn:
+          Number(process.env.REFRESH_TOKEN_EXPIRED_IN) || 7 * 24 * 60 * 60,
+      },
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 }

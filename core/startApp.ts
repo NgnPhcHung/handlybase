@@ -78,6 +78,7 @@ export const bootstrapApp = ({
           try {
             const params = resolveParams(req, res, instance, routeHandler);
             const result = await instance[routeHandler](...params);
+            console.log("result", result);
             res.json(result);
           } catch (err) {
             res

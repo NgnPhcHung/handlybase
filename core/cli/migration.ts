@@ -163,7 +163,7 @@ program
 
 
 export async function up(db: DatabaseClient): Promise<void> {
-  db.execute(\`${upQueries.flatMap((d) => d)}\`)
+  db.execute(\`${upQueries.flatMap((d) => d).join("\n")}\`)
 }
 
 export async function down(db: DatabaseClient): Promise<void> {

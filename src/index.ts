@@ -1,12 +1,13 @@
 import "reflect-metadata";
+import "module-alias/register";
+import "dotenv/config";
 
 import express, { Express } from "express";
-import "dotenv/config";
-import { DatabaseClient } from "../core/databases/databaseClient";
-import { container, bootstrapApp } from "../core/startApp";
 import { AppController } from "./controllers/app.controller";
-import { limiter } from "../core/helpers";
 import { datasource } from "./datasource";
+import { bootstrapApp, container, DatabaseClient } from "@core";
+import { limiter } from "@core";
+import cors from "cors";
 
 const app: Express = express();
 app.use(express.json());
@@ -16,6 +17,13 @@ async function bootstrap() {
   await db.connect();
 
   app.use(limiter());
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    }),
+  );
+
   container.register(DatabaseClient, db);
 
   bootstrapApp({
